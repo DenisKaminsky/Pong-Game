@@ -23,6 +23,13 @@ void Exit(HWND hWnd,WPARAM wParam,LPARAM lParam)
 		SendMessage(hWnd, WM_DESTROY, wParam, lParam);
 }
 
+void SetButtonFont(HWND hWnd,HFONT hFont)
+{
+	HDC hdc = GetDC(hWnd);
+	SendMessage(hWnd, WM_SETFONT, (WPARAM)hFont, true);
+	ReleaseDC(hWnd, hdc);
+}
+
 //message handler
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
@@ -93,6 +100,11 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdL
 	HWND hWnd;
 	MSG msg;
 
+	HFONT buttonFont = CreateFont(30, 20, 0, 0, FW_DONTCARE, FALSE, FALSE,
+		FALSE, DEFAULT_CHARSET, OUT_OUTLINE_PRECIS,
+		CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, VARIABLE_PITCH,
+		TEXT("Times New Roman"));
+
 	//window class initialization
 	wcex.cbSize = sizeof(WNDCLASSEX);
 	wcex.style = CS_DBLCLKS;
@@ -113,16 +125,13 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdL
 		WS_OVERLAPPED | WS_SYSMENU | WS_MINIMIZEBOX, CW_USEDEFAULT, 0,
 		CW_USEDEFAULT, 0, NULL, NULL, hInstance, NULL);
 	
-	buttonPlay = CreateWindow("button", "PLAY", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 500, 10, 120, 30, hWnd, (HMENU)BUTTON_PLAY_ID, hInstance, NULL);
-	buttonExit = CreateWindow("button", "EXIT", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 500, 100, 120, 30, hWnd, (HMENU)BUTTON_EXIT_ID, hInstance, NULL);
+	//buttons creation
+	buttonPlay = CreateWindow("button", "PLAY", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, WindowWidth/2-125, WindowHeight/2-100-20, 250, 100, hWnd, (HMENU)BUTTON_PLAY_ID, hInstance, NULL);
+	buttonExit = CreateWindow("button", "EXIT", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, WindowWidth/2-125, WindowHeight/2, 250, 100, hWnd, (HMENU)BUTTON_EXIT_ID, hInstance, NULL);
 		
-	HDC hdc = GetDC(buttonPlay);
-	HFONT hFont = CreateFont(30, 30, 0, 0, FW_DONTCARE, FALSE, FALSE,
-		FALSE, DEFAULT_CHARSET, OUT_OUTLINE_PRECIS,
-		CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, VARIABLE_PITCH,
-		TEXT("Times New Roman"));
-	SendMessage(buttonPlay, WM_SETFONT,(WPARAM) hFont, true);
-	ReleaseDC(buttonPlay, hdc);
+	//set buttons font
+	SetButtonFont(buttonPlay, buttonFont);
+	SetButtonFont(buttonExit, buttonFont);
 
 	//set window size
 	MoveWindow(hWnd, 150, 100, WindowWidth, WindowHeight, NULL);
