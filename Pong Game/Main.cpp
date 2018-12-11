@@ -3,6 +3,9 @@
 #include <math.h>
 #include <gdiplus.h>
 
+#define MAIN_MENU_ID 1
+#define MODE_MENI_ID 2
+#define DIFFICULTY_MENU_ID 3
 #define BUTTON_PLAY_ID 10000
 #define BUTTON_HELP_ID 10001
 #define BUTTON_EXIT_ID 10002
@@ -15,6 +18,8 @@
 HWND buttonPlay, buttonExit, buttonHelp;//main menu button
 HWND buttonOnePlayer, buttonTwoPlayer; //choose mode menu
 HWND buttonEasy, buttonNormal, buttonHard;//choose difficulty
+
+int currentMenuId;
 
 char szFile[MAX_PATH];
 int posX = 1;
@@ -35,14 +40,41 @@ void SetButtonFont(HWND hWnd,HFONT hFont)
 
 void ShowMainMenu()
 {
+	currentMenuId = MAIN_MENU_ID;
 	ShowWindow(buttonPlay, SW_SHOW);
 	ShowWindow(buttonHelp, SW_SHOW);
 	ShowWindow(buttonExit, SW_SHOW);
+	ShowWindow(buttonOnePlayer, SW_HIDE);
+	ShowWindow(buttonTwoPlayer, SW_HIDE);
+	ShowWindow(buttonEasy, SW_HIDE);
+	ShowWindow(buttonNormal, SW_HIDE);
+	ShowWindow(buttonHard, SW_HIDE);
 }
 
 void ShowChooseModeMenu()
 {
-	
+	currentMenuId = MODE_MENI_ID;
+	ShowWindow(buttonPlay, SW_HIDE);
+	ShowWindow(buttonHelp, SW_HIDE);
+	ShowWindow(buttonExit, SW_HIDE);
+	ShowWindow(buttonOnePlayer, SW_SHOW);
+	ShowWindow(buttonTwoPlayer, SW_SHOW);
+	ShowWindow(buttonEasy, SW_HIDE);
+	ShowWindow(buttonNormal, SW_HIDE);
+	ShowWindow(buttonHard, SW_HIDE);
+}
+
+void ShowDifficultyMenu()
+{
+	currentMenuId = DIFFICULTY_MENU_ID;
+	ShowWindow(buttonPlay, SW_HIDE);
+	ShowWindow(buttonHelp, SW_HIDE);
+	ShowWindow(buttonExit, SW_HIDE);
+	ShowWindow(buttonOnePlayer, SW_HIDE);
+	ShowWindow(buttonTwoPlayer, SW_HIDE);
+	ShowWindow(buttonEasy, SW_SHOW);
+	ShowWindow(buttonNormal, SW_SHOW);
+	ShowWindow(buttonHard, SW_SHOW);
 }
 
 //message handler
@@ -61,6 +93,21 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		switch (wParam)
 		{
 		case BUTTON_PLAY_ID:
+			ShowChooseModeMenu();
+			break;
+		case BUTTON_ONE_PLAYER_ID:
+			ShowDifficultyMenu();
+			break;
+		case BUTTON_TWO_PLAYER_ID:			
+			break;
+		case BUTTON_EASY_ID:
+			//SetFocus(hWnd);
+			break;
+		case BUTTON_NORMAL_ID:
+			//SetFocus(hWnd);
+			break;
+		case BUTTON_HARD_ID:
+			//SetFocus(hWnd);
 			break;
 		case BUTTON_HELP_ID:
 			MessageBox(hWnd, "gg \nnoob", "HELP", MB_OK);
@@ -72,17 +119,24 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		break;
 	//message from keybord
 	case WM_KEYDOWN: // Обработка нажатия клавиши
-		if (wParam == 68 || wParam == 39) //вправо
-			posX += speed;
-		if (wParam == 65 || wParam == 37) //влево
-			posX -= speed;
 		if (wParam == 83 || wParam == 40) //вниз
 			posY += speed;
 		if (wParam == 87 || wParam == 38) //вверх
 			posY -= speed;
 		if (wParam == 27) //если нажали ESC то выходим 
+		{			
+			//SendMessage(hWnd, WM_CLOSE, wParam, lParam);
+		}
+		if (wParam == 8) //press BackSpace to Go Back
 		{
-			//(hWnd, wParam, lParam);
+			switch (currentMenuId) {
+			case MODE_MENI_ID:
+				ShowMainMenu();
+				break;
+			case DIFFICULTY_MENU_ID:
+				ShowChooseModeMenu();
+				break;
+			}
 		}
 
 		InvalidateRect(hWnd, NULL, TRUE);
@@ -122,16 +176,16 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 void InitializeButtons(HWND hWnd,HINSTANCE hInstance)
 {
 	//menu buttins
-	buttonPlay = CreateWindow("button", "PLAY", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, WindowWidth / 2 - 125, WindowHeight / 2 - 100 - 70, 250, 100, hWnd, (HMENU)BUTTON_PLAY_ID, hInstance, NULL);
-	buttonHelp = CreateWindow("button", "HELP", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, WindowWidth / 2 - 125, WindowHeight / 2 - 50, 250, 100, hWnd, (HMENU)BUTTON_HELP_ID, hInstance, NULL);
-	buttonExit = CreateWindow("button", "EXIT", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, WindowWidth / 2 - 125, WindowHeight / 2 + 50 + 20, 250, 100, hWnd, (HMENU)BUTTON_EXIT_ID, hInstance, NULL);
+	buttonPlay = CreateWindow("button", "PLAY", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, WindowWidth / 2 - 130, WindowHeight / 2 - 100 - 70, 260, 100, hWnd, (HMENU)BUTTON_PLAY_ID, hInstance, NULL);
+	buttonHelp = CreateWindow("button", "HELP", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, WindowWidth / 2 - 130, WindowHeight / 2 - 50, 260, 100, hWnd, (HMENU)BUTTON_HELP_ID, hInstance, NULL);
+	buttonExit = CreateWindow("button", "EXIT", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, WindowWidth / 2 - 130, WindowHeight / 2 + 50 + 20, 260, 100, hWnd, (HMENU)BUTTON_EXIT_ID, hInstance, NULL);
 	//mode buttons
-	buttonOnePlayer = CreateWindow("button", "ONE PLAYER", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, WindowWidth / 2 - 125, WindowHeight / 2 - 100 - 20, 250, 100, hWnd, (HMENU)BUTTON_ONE_PLAYER_ID, hInstance, NULL);
-	buttonTwoPlayer = CreateWindow("button", "TWO PLAYERS", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, WindowWidth / 2 - 125, WindowHeight / 2, 250, 100, hWnd, (HMENU)BUTTON_TWO_PLAYER_ID, hInstance, NULL);
+	buttonOnePlayer = CreateWindow("button", "ONE PLAYER", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, WindowWidth / 2 - 125, WindowHeight / 2 - 100 - 20, 260, 100, hWnd, (HMENU)BUTTON_ONE_PLAYER_ID, hInstance, NULL);
+	buttonTwoPlayer = CreateWindow("button", "TWO PLAYERS", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, WindowWidth / 2 - 125, WindowHeight / 2, 260, 100, hWnd, (HMENU)BUTTON_TWO_PLAYER_ID, hInstance, NULL);
 	//difficulty buttons
-	buttonEasy = CreateWindow("button", "EASY", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, WindowWidth / 2 - 125, WindowHeight / 2 - 100 - 70, 250, 100, hWnd, (HMENU)BUTTON_EASY_ID, hInstance, NULL);
-	buttonNormal = CreateWindow("button", "NORMAL", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, WindowWidth / 2 - 125, WindowHeight / 2 - 50, 250, 100, hWnd, (HMENU)BUTTON_NORMAL_ID, hInstance, NULL);
-	buttonHard = CreateWindow("button", "HARD", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, WindowWidth / 2 - 125, WindowHeight / 2 + 50 + 20, 250, 100, hWnd, (HMENU)BUTTON_HARD_ID, hInstance, NULL);
+	buttonEasy = CreateWindow("button", "EASY", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, WindowWidth / 2 - 130, WindowHeight / 2 - 100 - 70, 260, 100, hWnd, (HMENU)BUTTON_EASY_ID, hInstance, NULL);
+	buttonNormal = CreateWindow("button", "NORMAL", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, WindowWidth / 2 - 130, WindowHeight / 2 - 50, 260, 100, hWnd, (HMENU)BUTTON_NORMAL_ID, hInstance, NULL);
+	buttonHard = CreateWindow("button", "HARD", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, WindowWidth / 2 - 130, WindowHeight / 2 + 50 + 20, 260, 100, hWnd, (HMENU)BUTTON_HARD_ID, hInstance, NULL);
 }
 
 int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdLine, int nCmdShow)
@@ -140,7 +194,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdL
 	HWND hWnd;
 	MSG msg;
 
-	HFONT buttonFont = CreateFont(30, 20, 0, 0, FW_DONTCARE, FALSE, FALSE,
+	HFONT buttonFont = CreateFont(30, 15, 0, 0, FW_DONTCARE, FALSE, FALSE,
 		FALSE, DEFAULT_CHARSET, OUT_OUTLINE_PRECIS,
 		CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, VARIABLE_PITCH,
 		TEXT("Times New Roman"));
@@ -180,6 +234,9 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdL
 
 	//set window size
 	MoveWindow(hWnd, 150, 100, WindowWidth, WindowHeight, NULL);
+	
+	//show menu
+	ShowMainMenu();
 	//show window
 	ShowWindow(hWnd, nCmdShow);
 	UpdateWindow(hWnd);
