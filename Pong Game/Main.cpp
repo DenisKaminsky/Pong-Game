@@ -7,6 +7,8 @@
 #define BUTTON_HELP_ID 10001
 #define BUTTON_EXIT_ID 10002
 
+HWND buttonPlay, buttonExit, buttonHelp;
+
 char szFile[MAX_PATH];
 int posX = 1;
 int posY = 1;
@@ -31,6 +33,13 @@ void SetButtonFont(HWND hWnd,HFONT hFont)
 	ReleaseDC(hWnd, hdc);
 }
 
+void ShowMainMenu()
+{
+	ShowWindow(buttonPlay, SW_SHOW);
+	ShowWindow(buttonHelp, SW_SHOW);
+	ShowWindow(buttonExit, SW_SHOW);
+}
+
 //message handler
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
@@ -46,6 +55,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	case WM_COMMAND:
 		switch (wParam)
 		{
+		case BUTTON_PLAY_ID:
+			break;
 		case BUTTON_HELP_ID:
 			MessageBox(hWnd, "gg \nnoob", "HELP", MB_OK);
 			break;
@@ -99,7 +110,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
 int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdLine, int nCmdShow)
 {
-	HWND buttonPlay, buttonExit, buttonHelp;
+	
 	WNDCLASSEX wcex;
 	HWND hWnd;
 	MSG msg;
