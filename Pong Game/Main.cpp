@@ -26,13 +26,6 @@ const int BoardWidth = 100;
 const int WindowHeight = 700;
 const int WindowWidth = 1200;
 
-void Exit(HWND hWnd,WPARAM wParam,LPARAM lParam)
-{
-	int MB_RESULT = MessageBox(hWnd, "Do you really want to exit ?", "Exit", MB_YESNO);
-	if (MB_RESULT == 6)
-		SendMessage(hWnd, WM_DESTROY, wParam, lParam);
-}
-
 void SetButtonFont(HWND hWnd,HFONT hFont)
 {
 	HDC hdc = GetDC(hWnd);
@@ -73,7 +66,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			MessageBox(hWnd, "gg \nnoob", "HELP", MB_OK);
 			break;
 		case BUTTON_EXIT_ID:
-			Exit(hWnd, wParam, lParam);
+			SendMessage(hWnd, WM_CLOSE, wParam, lParam);
 			break;
 		}
 		break;
@@ -89,7 +82,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			posY -= speed;
 		if (wParam == 27) //если нажали ESC то выходим 
 		{
-			Exit(hWnd, wParam, lParam);
+			//(hWnd, wParam, lParam);
 		}
 
 		InvalidateRect(hWnd, NULL, TRUE);
@@ -109,6 +102,13 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		ReleaseDC(hWnd, hdc);
 		EndPaint(hWnd, &ps);
 		break;
+	//closing window
+	case WM_CLOSE:
+		MB_RESULT = MessageBox(hWnd, "Do you really want to exit ?", "Exit", MB_YESNO);
+		if (MB_RESULT == 6)
+			SendMessage(hWnd, WM_DESTROY, wParam, lParam);
+		break;
+	//destroy window
 	case WM_DESTROY:
 		DeleteObject(solidBrush);
 		PostQuitMessage(0);
@@ -135,8 +135,7 @@ void InitializeButtons(HWND hWnd,HINSTANCE hInstance)
 }
 
 int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdLine, int nCmdShow)
-{
-	
+{	
 	WNDCLASSEX wcex;
 	HWND hWnd;
 	MSG msg;
@@ -173,6 +172,11 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdL
 	SetButtonFont(buttonPlay, buttonFont);
 	SetButtonFont(buttonHelp, buttonFont);
 	SetButtonFont(buttonExit, buttonFont);
+	SetButtonFont(buttonOnePlayer, buttonFont);
+	SetButtonFont(buttonTwoPlayer, buttonFont);
+	SetButtonFont(buttonEasy, buttonFont);
+	SetButtonFont(buttonNormal, buttonFont);
+	SetButtonFont(buttonHard, buttonFont);
 
 	//set window size
 	MoveWindow(hWnd, 150, 100, WindowWidth, WindowHeight, NULL);
