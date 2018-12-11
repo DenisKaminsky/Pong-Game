@@ -4,7 +4,8 @@
 #include <gdiplus.h>
 
 #define BUTTON_PLAY_ID 10000
-#define BUTTON_EXIT_ID 10001
+#define BUTTON_HELP_ID 10001
+#define BUTTON_EXIT_ID 10002
 
 char szFile[MAX_PATH];
 int posX = 1;
@@ -45,6 +46,9 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	case WM_COMMAND:
 		switch (wParam)
 		{
+		case BUTTON_HELP_ID:
+			MessageBox(hWnd, "gg \nnoob", "HELP", MB_OK);
+			break;
 		case BUTTON_EXIT_ID:
 			Exit(hWnd, wParam, lParam);
 			break;
@@ -95,7 +99,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
 int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdLine, int nCmdShow)
 {
-	HWND buttonPlay, buttonExit;
+	HWND buttonPlay, buttonExit, buttonHelp;
 	WNDCLASSEX wcex;
 	HWND hWnd;
 	MSG msg;
@@ -126,11 +130,13 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdL
 		CW_USEDEFAULT, 0, NULL, NULL, hInstance, NULL);
 	
 	//buttons creation
-	buttonPlay = CreateWindow("button", "PLAY", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, WindowWidth/2-125, WindowHeight/2-100-20, 250, 100, hWnd, (HMENU)BUTTON_PLAY_ID, hInstance, NULL);
-	buttonExit = CreateWindow("button", "EXIT", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, WindowWidth/2-125, WindowHeight/2, 250, 100, hWnd, (HMENU)BUTTON_EXIT_ID, hInstance, NULL);
+	buttonPlay = CreateWindow("button", "PLAY", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, WindowWidth/2-125, WindowHeight/2-100-70, 250, 100, hWnd, (HMENU)BUTTON_PLAY_ID, hInstance, NULL);
+	buttonHelp = CreateWindow("button", "HELP", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, WindowWidth/2-125, WindowHeight/2-50, 250, 100, hWnd, (HMENU)BUTTON_HELP_ID, hInstance, NULL);
+	buttonExit = CreateWindow("button", "EXIT", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, WindowWidth/2-125, WindowHeight/2+50+20, 250, 100, hWnd, (HMENU)BUTTON_EXIT_ID, hInstance, NULL);
 		
 	//set buttons font
 	SetButtonFont(buttonPlay, buttonFont);
+	SetButtonFont(buttonHelp, buttonFont);
 	SetButtonFont(buttonExit, buttonFont);
 
 	//set window size
