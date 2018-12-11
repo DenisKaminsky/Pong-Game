@@ -11,10 +11,19 @@ int posX = 1;
 int posY = 1;
 
 const int speed = 10;
-const int hight = 100;
-const int width = 100;
+const int BoardHeight = 100;
+const int BoardWidth = 100;
+const int WindowHeight = 700;
+const int WindowWidth = 1200;
 
-//обработчик сообщений
+void Exit(HWND hWnd,WPARAM wParam,LPARAM lParam)
+{
+	int MB_RESULT = MessageBox(hWnd, "Do you really want to exit ?", "Exit", MB_YESNO);
+	if (MB_RESULT == 6)
+		SendMessage(hWnd, WM_DESTROY, wParam, lParam);
+}
+
+//message handler
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
 	HDC hdc;
@@ -25,8 +34,16 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	int MB_RESULT;
 	
 	switch (message)
-	{		
-	//обработка сообщений клавиш
+	{	
+	case WM_COMMAND:
+		switch (wParam)
+		{
+		case BUTTON_EXIT_ID:
+			Exit(hWnd, wParam, lParam);
+			break;
+		}
+		break;
+	//message from keybord
 	case WM_KEYDOWN: // Обработка нажатия клавиши
 		if (wParam == 68 || wParam == 39) //вправо
 			posX += speed;
@@ -38,23 +55,21 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			posY -= speed;
 		if (wParam == 27) //если нажали ESC то выходим 
 		{
-			MB_RESULT = MessageBox(hWnd, "Вы действительно хотите выйти ?", "Выход", MB_YESNO);
-			if (MB_RESULT == 6)
-				SendMessage(hWnd, WM_DESTROY, wParam, lParam);
+			Exit(hWnd, wParam, lParam);
 		}
 
 		InvalidateRect(hWnd, NULL, TRUE);
 		break;
 
-		//обработка сообщений перерисовки
+	//repaint message
 	case WM_PAINT:
-		hdc = BeginPaint(hWnd, &ps);//дискриптор контекста устройства клиентской области окна
+		hdc = BeginPaint(hWnd, &ps);
 
 		RECT rect;
 		rect.top = posY;
 		rect.left = posX;
-		rect.right = posX + width;
-		rect.bottom = posY + hight;
+		rect.right = posX + BoardWidth;
+		rect.bottom = posY + BoardHeight;
 		FillRect(hdc, &rect, solidBrush);
 			
 		ReleaseDC(hWnd, hdc);
@@ -78,7 +93,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdL
 	HWND hWnd;
 	MSG msg;
 
-	//инициализация структуры класса окна
+	//window class initialization
 	wcex.cbSize = sizeof(WNDCLASSEX);
 	wcex.style = CS_DBLCLKS;
 	wcex.lpfnWndProc = WndProc;
@@ -91,15 +106,16 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdL
 	wcex.lpszMenuName = NULL;
 	wcex.lpszClassName = "PongGame";
 	wcex.hIconSm = wcex.hIcon;
-	RegisterClassEx(&wcex);//регистрация окна
+	RegisterClassEx(&wcex);//window registration
 
-	//создание окна
+	//window creation
 	hWnd = CreateWindow("PongGame", "The Game Pong",
 		WS_OVERLAPPED | WS_SYSMENU | WS_MINIMIZEBOX, CW_USEDEFAULT, 0,
 		CW_USEDEFAULT, 0, NULL, NULL, hInstance, NULL);
 	
-	buttonPlay = CreateWindow("button", "ИГРАТЬ", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-		500, 10, 120, 30, hWnd, (HMENU)BUTTON_PLAY_ID, hInstance, NULL);
+	buttonPlay = CreateWindow("button", "PLAY", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 500, 10, 120, 30, hWnd, (HMENU)BUTTON_PLAY_ID, hInstance, NULL);
+	buttonExit = CreateWindow("button", "EXIT", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 500, 100, 120, 30, hWnd, (HMENU)BUTTON_EXIT_ID, hInstance, NULL);
+		
 	HDC hdc = GetDC(buttonPlay);
 	HFONT hFont = CreateFont(30, 30, 0, 0, FW_DONTCARE, FALSE, FALSE,
 		FALSE, DEFAULT_CHARSET, OUT_OUTLINE_PRECIS,
@@ -107,11 +123,14 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdL
 		TEXT("Times New Roman"));
 	SendMessage(buttonPlay, WM_SETFONT,(WPARAM) hFont, true);
 	ReleaseDC(buttonPlay, hdc);
-	//отображение окна
+
+	//set window size
+	MoveWindow(hWnd, 150, 100, WindowWidth, WindowHeight, NULL);
+	//show window
 	ShowWindow(hWnd, nCmdShow);
 	UpdateWindow(hWnd);
 
-	//прием сообщений
+	//recieve message
 	while (GetMessage(&msg, NULL, 0, 0))
 	{
 		TranslateMessage(&msg);
