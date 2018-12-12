@@ -41,23 +41,41 @@ void SetButtonFont(HWND hWnd,HFONT hFont)
 HRGN CreateButtonForm(int buttonWidth, int buttonHeight,int offset)
 {
 	HRGN region;
-	POINT *pnt = (POINT *)malloc(sizeof(POINT) * 4);
-	pnt[0].x = 0;
+	POINT *pnt = (POINT *)malloc(sizeof(POINT) * 6);
+	pnt[0].x = offset;
 	pnt[0].y = buttonHeight;
-	pnt[1].x = buttonWidth-offset;
+	pnt[1].x = buttonWidth - offset;
 	pnt[1].y = buttonHeight;
 	pnt[2].x = buttonWidth;
-	pnt[2].y = 0;
-	pnt[3].x = offset;
-	pnt[3].y = 0;	
-
-	region = CreatePolygonRgn(pnt, 4, ALTERNATE);
+	pnt[2].y = buttonHeight/2;
+	pnt[3].x = buttonWidth - offset;
+	pnt[3].y = 0;
+	pnt[4].x = offset;
+	pnt[4].y = 0;
+	pnt[5].x = 0;
+	pnt[5].y = buttonHeight/2;
+	region = CreatePolygonRgn(pnt, 6, ALTERNATE);
 	free(pnt);
 	return region;
 }
 
-void ShowMainMenu()
+void PrintTextToScreen(HDC hdc, int x, int y, LPCSTR text, int length, int fontHeight, int fontWidth, COLORREF color)
 {
+	HFONT hFont = CreateFont(fontHeight, fontWidth, 0, 0, FW_DONTCARE, FALSE, FALSE,
+		FALSE, DEFAULT_CHARSET, OUT_OUTLINE_PRECIS,
+		CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, VARIABLE_PITCH,
+		TEXT("SlantCYRILLIC"));
+
+	SelectObject(hdc, hFont);
+	SetTextColor(hdc, color);
+	SetBkMode(hdc, TRANSPARENT);
+	TextOut(hdc, x, y, text, length);
+	DeleteObject(hFont);
+}
+
+void ShowMainMenu(HWND hWnd)
+{
+	InvalidateRect(hWnd, NULL, TRUE);
 	currentMenuId = MAIN_MENU_ID;
 	ShowWindow(buttonPlay, SW_SHOW);
 	ShowWindow(buttonHelp, SW_SHOW);
@@ -67,10 +85,16 @@ void ShowMainMenu()
 	ShowWindow(buttonEasy, SW_HIDE);
 	ShowWindow(buttonNormal, SW_HIDE);
 	ShowWindow(buttonHard, SW_HIDE);
+
+	
+	HDC hdc = GetDC(hWnd);
+	PrintTextToScreen(hdc, WindowWidth / 2 - 200, 100, "THE GAME PONG", 13, 60, 30, RGB(0, 0, 255));
+	ReleaseDC(hWnd, hdc);	
 }
 
-void ShowChooseModeMenu()
+void ShowChooseModeMenu(HWND hWnd)
 {
+	InvalidateRect(hWnd, NULL, TRUE);
 	currentMenuId = MODE_MENI_ID;
 	ShowWindow(buttonPlay, SW_HIDE);
 	ShowWindow(buttonHelp, SW_HIDE);
@@ -80,19 +104,27 @@ void ShowChooseModeMenu()
 	ShowWindow(buttonEasy, SW_HIDE);
 	ShowWindow(buttonNormal, SW_HIDE);
 	ShowWindow(buttonHard, SW_HIDE);
+
+	HDC hdc = GetDC(hWnd);
+	PrintTextToScreen(hdc, WindowWidth / 2 - 80, 140, "MODE", 4, 60, 30, RGB(0, 255, 0));
+	ReleaseDC(hWnd, hdc);
 }
 
-void ShowDifficultyMenu()
+void ShowDifficultyMenu(HWND hWnd)
 {
+	InvalidateRect(hWnd, NULL, TRUE);
 	currentMenuId = DIFFICULTY_MENU_ID;
-	UpdateWindow(buttonPlay);
 	ShowWindow(buttonHelp, SW_HIDE);
 	ShowWindow(buttonExit, SW_HIDE);
 	ShowWindow(buttonOnePlayer, SW_HIDE);
 	ShowWindow(buttonTwoPlayer, SW_HIDE);
 	ShowWindow(buttonEasy, SW_SHOW);
 	ShowWindow(buttonNormal, SW_SHOW);
-	ShowWindow(buttonHard, SW_SHOW);
+	ShowWindow(buttonHard, SW_SHOW);	
+
+	HDC hdc = GetDC(hWnd);
+	PrintTextToScreen(hdc, WindowWidth / 2 - 125, 120, "DIFFICULTY", 10, 60, 30, RGB(255, 0, 0));
+	ReleaseDC(hWnd, hdc);
 }
 
 void InitializeButtons(HWND hWnd, HINSTANCE hInstance, int buttonWidth, int buttonHeight, int Incline)
@@ -113,21 +145,27 @@ void InitializeButtons(HWND hWnd, HINSTANCE hInstance, int buttonWidth, int butt
 
 void RedrawButton(HWND button,LPCSTR text,int textLength)
 {
-	RECT rect;
+	RECT rect,rectForText;
 	HRGN region;
 	HFONT buttonFont = CreateFont(30, 15, 0, 0, FW_DONTCARE, FALSE, FALSE,
 		FALSE, DEFAULT_CHARSET, OUT_OUTLINE_PRECIS,
 		CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, VARIABLE_PITCH,
 		TEXT("SlantCYRILLIC"));
 
+	HDC hdc = GetDC(button);
 	//get button form
 	GetWindowRect(button, &rect);
 	region = CreateButtonForm(rect.right-rect.left,rect.bottom-rect.top,buttonIncline);
+	rectForText.top = 0;
+	rectForText.left = 0;
+	rectForText.right = 1;
+	rectForText.bottom = 1;
 	//create button form
-	HDC hdc = GetDC(button);
 	SelectObject(hdc, buttonFont);
+	//get text length
+	DrawText(hdc, text, textLength, &rectForText, DT_CALCRECT | DT_SINGLELINE);
 	SetBkMode(hdc, TRANSPARENT);
-	TextOut(hdc, 50, 0, text, textLength);
+	TextOut(hdc, (rect.right-rect.left)/2- (rectForText.right)/2, (rect.bottom-rect.top)/2-15, text, textLength);
 	SetWindowRgn(button, region, true);
 	UpdateWindow(button);
 	ReleaseDC(button, hdc);
@@ -182,10 +220,10 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		switch (wParam)
 		{
 		case BUTTON_PLAY_ID:
-			ShowChooseModeMenu();
+			ShowChooseModeMenu(hWnd);
 			break;
 		case BUTTON_ONE_PLAYER_ID:
-			ShowDifficultyMenu();
+			ShowDifficultyMenu(hWnd);
 			break;
 		case BUTTON_TWO_PLAYER_ID:			
 			break;
@@ -208,29 +246,32 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		break;
 	//message from keybord
 	case WM_KEYDOWN: // Обработка нажатия клавиши
+	{
+		bool isBack = false;
 		if (wParam == 83 || wParam == 40) //вниз
 			posY += speed;
 		if (wParam == 87 || wParam == 38) //вверх
 			posY -= speed;
 		if (wParam == 27) //если нажали ESC то выходим 
-		{			
+		{
 			//SendMessage(hWnd, WM_CLOSE, wParam, lParam);
 		}
 		if (wParam == 8) //press BackSpace to Go Back
 		{
+			isBack = true;
 			switch (currentMenuId) {
 			case MODE_MENI_ID:
-				ShowMainMenu();
+				ShowMainMenu(hWnd);
 				break;
 			case DIFFICULTY_MENU_ID:
-				ShowChooseModeMenu();
+				ShowChooseModeMenu(hWnd);
 				break;
 			}
 		}
-
-		InvalidateRect(hWnd, NULL, TRUE);
-		break;
-
+		if (!isBack)
+			InvalidateRect(hWnd, NULL, TRUE);
+	}
+	break;
 	//repaint message
 	/*case WM_PAINT:
 		hdc = BeginPaint(hWnd, &ps);
@@ -241,7 +282,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		rect.right = posX + BoardWidth;
 		rect.bottom = posY + BoardHeight;
 		FillRect(hdc, &rect, solidBrush);
-			
+
 		ReleaseDC(hWnd, hdc);
 		EndPaint(hWnd, &ps);
 		break;*/
@@ -270,11 +311,6 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdL
 	HWND hWnd;
 	MSG msg;
 
-	/*HFONT buttonFont = CreateFont(30, 15, 0, 0, FW_DONTCARE, FALSE, FALSE,
-		FALSE, DEFAULT_CHARSET, OUT_OUTLINE_PRECIS,
-		CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, VARIABLE_PITCH,
-		TEXT("SlantCYRILLIC"));*/
-
 	//window class initialization
 	wcex.cbSize = sizeof(WNDCLASSEX);
 	wcex.style = CS_DBLCLKS;
@@ -296,28 +332,15 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdL
 		CW_USEDEFAULT, 0, NULL, NULL, hInstance, NULL);
 	
 	//buttons creation
-	InitializeButtons(hWnd, hInstance,260,100,30);
-	/*	
-	//set buttons font
-	SetButtonFont(buttonPlay, buttonFont);
-	SetButtonFont(buttonHelp, buttonFont);
-	SetButtonFont(buttonExit, buttonFont);
-	SetButtonFont(buttonOnePlayer, buttonFont);
-	SetButtonFont(buttonTwoPlayer, buttonFont);
-	SetButtonFont(buttonEasy, buttonFont);
-	SetButtonFont(buttonNormal, buttonFont);
-	SetButtonFont(buttonHard, buttonFont);*/
-
+	InitializeButtons(hWnd, hInstance,260,80,30);
 	//set window size
-	MoveWindow(hWnd, 150, 100, WindowWidth, WindowHeight, NULL);
+	MoveWindow(hWnd, 150, 100, WindowWidth, WindowHeight, NULL);	
 	
-	//show menu
-	ShowMainMenu();
-
 	//show window
 	ShowWindow(hWnd, nCmdShow);
 	UpdateWindow(hWnd);
-
+	//show menu
+	ShowMainMenu(hWnd);
 	//recieve message
 	while (GetMessage(&msg, NULL, 0, 0))
 	{
