@@ -1,10 +1,14 @@
 #define _USE_MATH_DEFINES
 #include <windows.h>
 #include <math.h>
+#include <gdiplus.h>
+#pragma comment(lib,"gdiplus.lib")
 
 #define MAIN_MENU_ID 1
 #define MODE_MENI_ID 2
 #define DIFFICULTY_MENU_ID 3
+#define RESULT_MENU_ID 4
+
 #define BUTTON_PLAY_ID 10000
 #define BUTTON_HELP_ID 10001
 #define BUTTON_EXIT_ID 10002
@@ -13,10 +17,15 @@
 #define BUTTON_EASY_ID 10005
 #define BUTTON_NORMAL_ID 10006
 #define BUTTON_HARD_ID 10007
+#define BUTTON_REPEAT_ID 10008
+#define BUTTON_MAIN_MENU_ID 10009
 
 HWND buttonPlay, buttonExit, buttonHelp;//main menu button
 HWND buttonOnePlayer, buttonTwoPlayer; //choose mode menu
 HWND buttonEasy, buttonNormal, buttonHard;//choose difficulty
+HWND buttonRepeat, buttonMainMenu; //game result;
+HFONT hFont;
+HBITMAP hBitmap;
 
 int currentMenuId;
 
@@ -35,6 +44,29 @@ void SetButtonFont(HWND hWnd,HFONT hFont)
 	HDC hdc = GetDC(hWnd);
 	SendMessage(hWnd, WM_SETFONT, (WPARAM)hFont, true);
 	ReleaseDC(hWnd, hdc);
+}
+
+SIZE GetBitmapSize(HBITMAP hBitmap)
+{
+	BITMAP bitmap;
+	GetObject(hBitmap, sizeof(BITMAP), &bitmap);
+	SIZE result;
+	result.cx = bitmap.bmWidth;
+	result.cy = bitmap.bmHeight;
+	return result;
+}
+
+HBITMAP LoadImageToBitmap(LPCWSTR path)
+{
+	HBITMAP hBitmap;
+	Gdiplus::GdiplusStartupInput gdiplusStartupInput;
+	ULONG_PTR gdiplusToken;
+	GdiplusStartup(&gdiplusToken, &gdiplusStartupInput, NULL);//инифиализируем gdi+
+
+	Gdiplus::Bitmap *img = Gdiplus::Bitmap::FromFile(path);
+	img->GetHBITMAP(GetSysColor(COLOR_WINDOW), &hBitmap);
+	Gdiplus::GdiplusShutdown(gdiplusToken);
+	return hBitmap;
 }
 
 //create form of button
@@ -59,22 +91,18 @@ HRGN CreateButtonForm(int buttonWidth, int buttonHeight,int offset)
 	return region;
 }
 
-void PrintTextToScreen(HDC hdc, int x, int y, LPCSTR text, int length, int fontHeight, int fontWidth, COLORREF color)
-{
-	HFONT hFont = CreateFont(fontHeight, fontWidth, 0, 0, FW_DONTCARE, FALSE, FALSE,
-		FALSE, DEFAULT_CHARSET, OUT_OUTLINE_PRECIS,
-		CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, VARIABLE_PITCH,
-		TEXT("SlantCYRILLIC"));
-
+void PrintTextToScreen(HDC hdc, int x, int y, LPCSTR text, int length, COLORREF color,HFONT hFont)
+{	
 	SelectObject(hdc, hFont);
 	SetTextColor(hdc, color);
 	SetBkMode(hdc, TRANSPARENT);
 	TextOut(hdc, x, y, text, length);
-	DeleteObject(hFont);
 }
 
 void ShowMainMenu(HWND hWnd)
 {
+	HDC hdc;
+
 	InvalidateRect(hWnd, NULL, TRUE);
 	currentMenuId = MAIN_MENU_ID;
 	ShowWindow(buttonPlay, SW_SHOW);
@@ -85,15 +113,18 @@ void ShowMainMenu(HWND hWnd)
 	ShowWindow(buttonEasy, SW_HIDE);
 	ShowWindow(buttonNormal, SW_HIDE);
 	ShowWindow(buttonHard, SW_HIDE);
-
+	ShowWindow(buttonRepeat, SW_HIDE);
+	ShowWindow(buttonMainMenu, SW_HIDE);
 	
-	HDC hdc = GetDC(hWnd);
-	PrintTextToScreen(hdc, WindowWidth / 2 - 200, 100, "THE GAME PONG", 13, 60, 30, RGB(0, 0, 255));
+	hdc = GetDC(hWnd);
+	PrintTextToScreen(hdc, WindowWidth / 2 - 200, 100, "THE GAME PONG", 13, RGB(0, 0, 255),hFont);
 	ReleaseDC(hWnd, hdc);	
 }
 
 void ShowChooseModeMenu(HWND hWnd)
 {
+	HDC hdc;
+
 	InvalidateRect(hWnd, NULL, TRUE);
 	currentMenuId = MODE_MENI_ID;
 	ShowWindow(buttonPlay, SW_HIDE);
@@ -105,25 +136,50 @@ void ShowChooseModeMenu(HWND hWnd)
 	ShowWindow(buttonNormal, SW_HIDE);
 	ShowWindow(buttonHard, SW_HIDE);
 
-	HDC hdc = GetDC(hWnd);
-	PrintTextToScreen(hdc, WindowWidth / 2 - 80, 140, "MODE", 4, 60, 30, RGB(0, 255, 0));
+	hdc = GetDC(hWnd);
+	PrintTextToScreen(hdc, WindowWidth / 2 - 80, 140, "MODE", 4, RGB(0, 255, 0),hFont);
 	ReleaseDC(hWnd, hdc);
 }
 
 void ShowDifficultyMenu(HWND hWnd)
 {
+	HDC hdc;
+
 	InvalidateRect(hWnd, NULL, TRUE);
 	currentMenuId = DIFFICULTY_MENU_ID;
-	ShowWindow(buttonHelp, SW_HIDE);
-	ShowWindow(buttonExit, SW_HIDE);
 	ShowWindow(buttonOnePlayer, SW_HIDE);
 	ShowWindow(buttonTwoPlayer, SW_HIDE);
 	ShowWindow(buttonEasy, SW_SHOW);
 	ShowWindow(buttonNormal, SW_SHOW);
 	ShowWindow(buttonHard, SW_SHOW);	
 
-	HDC hdc = GetDC(hWnd);
-	PrintTextToScreen(hdc, WindowWidth / 2 - 125, 120, "DIFFICULTY", 10, 60, 30, RGB(255, 0, 0));
+	hdc = GetDC(hWnd);
+	PrintTextToScreen(hdc, WindowWidth / 2 - 125, 120, "DIFFICULTY", 10, RGB(255, 0, 0),hFont);
+	ReleaseDC(hWnd, hdc);
+}
+
+void ShowGameResult(HWND hWnd,LPCSTR gameResult,int length)
+{
+	HDC hdc, sDC;
+	HGDIOBJ prevobj;
+	SIZE bitmapSize;
+
+	InvalidateRect(hWnd, NULL, TRUE);
+	currentMenuId = RESULT_MENU_ID;
+	ShowWindow(buttonPlay, SW_HIDE);
+	ShowWindow(buttonHelp, SW_HIDE);
+	ShowWindow(buttonExit, SW_HIDE);
+	ShowWindow(buttonRepeat, SW_SHOW);
+	ShowWindow(buttonMainMenu, SW_SHOW);
+
+	hdc = GetDC(hWnd);
+	PrintTextToScreen(hdc, WindowWidth / 2 - 60 , 220, gameResult, length, RGB(255, 0, 0),hFont);
+	sDC = CreateCompatibleDC(hdc);//создаем контекст устройства в памяти , совместимый с данным устройством
+	prevobj = SelectObject(sDC, hBitmap);
+	bitmapSize = GetBitmapSize(hBitmap);
+	BitBlt(hdc, 320, 30, bitmapSize.cx, bitmapSize.cy, sDC, 0, 0, SRCCOPY);
+	SelectObject(sDC, prevobj);
+	DeleteDC(sDC);
 	ReleaseDC(hWnd, hdc);
 }
 
@@ -141,6 +197,9 @@ void InitializeButtons(HWND hWnd, HINSTANCE hInstance, int buttonWidth, int butt
 	buttonEasy = CreateWindow("button", "EASY", WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | BS_PUSHBUTTON | BS_OWNERDRAW, WindowWidth / 2 - buttonWidth / 2, WindowHeight / 2 - buttonHeight - (buttonHeight / 2 + 20), buttonWidth, buttonHeight, hWnd, (HMENU)BUTTON_EASY_ID, hInstance, NULL);
 	buttonNormal = CreateWindow("button", "NORMAL", WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | BS_PUSHBUTTON | BS_OWNERDRAW, WindowWidth / 2 - buttonWidth / 2, WindowHeight / 2 - buttonHeight/2, buttonWidth, buttonHeight, hWnd, (HMENU)BUTTON_NORMAL_ID, hInstance, NULL);
 	buttonHard = CreateWindow("button", "HARD", WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | BS_PUSHBUTTON | BS_OWNERDRAW, WindowWidth / 2 - buttonWidth / 2, WindowHeight / 2 + buttonHeight/2 + 20, buttonWidth, buttonHeight, hWnd, (HMENU)BUTTON_HARD_ID, hInstance, NULL);
+	//gameover buttons
+	buttonRepeat = CreateWindow("button", "REPEAT", WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | BS_PUSHBUTTON | BS_OWNERDRAW, WindowWidth / 2 - buttonWidth / 2, WindowHeight / 2 - buttonHeight/2 , buttonWidth, buttonHeight, hWnd, (HMENU)BUTTON_REPEAT_ID, hInstance, NULL);
+	buttonMainMenu = CreateWindow("button", "MAIN MENU", WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | BS_PUSHBUTTON | BS_OWNERDRAW, WindowWidth / 2 - buttonWidth / 2, WindowHeight / 2 + buttonHeight/2 + 20, buttonWidth, buttonHeight, hWnd, (HMENU)BUTTON_MAIN_MENU_ID, hInstance, NULL);
 }
 
 void RedrawButton(HWND button,LPCSTR text,int textLength)
@@ -175,10 +234,8 @@ void RedrawButton(HWND button,LPCSTR text,int textLength)
 //message handler
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
-	HDC hdc;
 	static HBRUSH solidBrush = CreateSolidBrush(RGB(0, 255, 0));
 	PAINTSTRUCT ps;
-	int fwKeys;
 	int MB_RESULT;
 
 	switch (message)
@@ -212,6 +269,12 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		case BUTTON_HARD_ID:
 			RedrawButton(buttonHard, "HARD", 4);
 			break;
+		case BUTTON_REPEAT_ID:
+			RedrawButton(buttonRepeat, "REPEAT", 6);
+			break;
+		case BUTTON_MAIN_MENU_ID:
+			RedrawButton(buttonMainMenu, "MAIN MENU", 9);
+			break;
 		}	
 	}
 	break;
@@ -237,17 +300,22 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			//SetFocus(hWnd);
 			break;
 		case BUTTON_HELP_ID:
-			MessageBox(hWnd, "gg \nnoob", "HELP", MB_OK);
+			MessageBox(hWnd, "gg \nnoob", "HELP", MB_OK);			
 			break;
 		case BUTTON_EXIT_ID:
 			SendMessage(hWnd, WM_CLOSE, wParam, lParam);
+			break;
+		case BUTTON_REPEAT_ID:
+			break;
+		case BUTTON_MAIN_MENU_ID:
+			ShowMainMenu(hWnd);
 			break;
 		}
 		break;
 	//message from keybord
 	case WM_KEYDOWN: // Обработка нажатия клавиши
 	{
-		bool isBack = false;
+		bool needUpdate = false;
 		if (wParam == 83 || wParam == 40) //вниз
 			posY += speed;
 		if (wParam == 87 || wParam == 38) //вверх
@@ -258,7 +326,6 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		}
 		if (wParam == 8) //press BackSpace to Go Back
 		{
-			isBack = true;
 			switch (currentMenuId) {
 			case MODE_MENI_ID:
 				ShowMainMenu(hWnd);
@@ -268,7 +335,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 				break;
 			}
 		}
-		if (!isBack)
+		if (needUpdate)
 			InvalidateRect(hWnd, NULL, TRUE);
 	}
 	break;
@@ -296,6 +363,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	case WM_DESTROY:
 	{
 		DeleteObject(solidBrush);
+		DeleteObject(hFont);
 		PostQuitMessage(0);
 	}
 		break;
@@ -326,11 +394,19 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdL
 	wcex.hIconSm = wcex.hIcon;
 	RegisterClassEx(&wcex);//window registration
 	
+	hBitmap = LoadImageToBitmap(L"..\\ResourceFiles\\game.jpg");
+
 	//window creation
 	hWnd = CreateWindow("PongGame", "The Game Pong",
 		WS_OVERLAPPED | WS_SYSMENU | WS_MINIMIZEBOX, CW_USEDEFAULT, 0,
 		CW_USEDEFAULT, 0, NULL, NULL, hInstance, NULL);
 	
+	//font creation
+	hFont = CreateFont(60, 30, 0, 0, FW_DONTCARE, FALSE, FALSE,
+		FALSE, DEFAULT_CHARSET, OUT_OUTLINE_PRECIS,
+		CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, VARIABLE_PITCH,
+		TEXT("SlantCYRILLIC"));
+
 	//buttons creation
 	InitializeButtons(hWnd, hInstance,260,80,30);
 	//set window size
@@ -341,12 +417,12 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdL
 	UpdateWindow(hWnd);
 	//show menu
 	ShowMainMenu(hWnd);
+	ShowGameResult(hWnd, "YOU WIN", 7);
 	//recieve message
 	while (GetMessage(&msg, NULL, 0, 0))
 	{
 		TranslateMessage(&msg);
 		DispatchMessage(&msg);
 	}
-
 	return (int)msg.wParam;
 }
