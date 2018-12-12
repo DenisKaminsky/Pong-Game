@@ -1,7 +1,6 @@
 #define _USE_MATH_DEFINES
 #include <windows.h>
 #include <math.h>
-#include <gdiplus.h>
 
 #define MAIN_MENU_ID 1
 #define MODE_MENI_ID 2
@@ -21,7 +20,6 @@ HWND buttonEasy, buttonNormal, buttonHard;//choose difficulty
 
 int currentMenuId;
 
-char szFile[MAX_PATH];
 int posX = 1;
 int posY = 1;
 
@@ -30,12 +28,32 @@ const int BoardHeight = 100;
 const int BoardWidth = 100;
 const int WindowHeight = 700;
 const int WindowWidth = 1200;
+int buttonIncline;
 
 void SetButtonFont(HWND hWnd,HFONT hFont)
 {
 	HDC hdc = GetDC(hWnd);
 	SendMessage(hWnd, WM_SETFONT, (WPARAM)hFont, true);
 	ReleaseDC(hWnd, hdc);
+}
+
+//create form of button
+HRGN CreateButtonForm(int buttonWidth, int buttonHeight,int offset)
+{
+	HRGN region;
+	POINT *pnt = (POINT *)malloc(sizeof(POINT) * 4);
+	pnt[0].x = 0;
+	pnt[0].y = buttonHeight;
+	pnt[1].x = buttonWidth-offset;
+	pnt[1].y = buttonHeight;
+	pnt[2].x = buttonWidth;
+	pnt[2].y = 0;
+	pnt[3].x = offset;
+	pnt[3].y = 0;	
+
+	region = CreatePolygonRgn(pnt, 4, ALTERNATE);
+	free(pnt);
+	return region;
 }
 
 void ShowMainMenu()
@@ -67,7 +85,7 @@ void ShowChooseModeMenu()
 void ShowDifficultyMenu()
 {
 	currentMenuId = DIFFICULTY_MENU_ID;
-	ShowWindow(buttonPlay, SW_HIDE);
+	UpdateWindow(buttonPlay);
 	ShowWindow(buttonHelp, SW_HIDE);
 	ShowWindow(buttonExit, SW_HIDE);
 	ShowWindow(buttonOnePlayer, SW_HIDE);
@@ -77,18 +95,89 @@ void ShowDifficultyMenu()
 	ShowWindow(buttonHard, SW_SHOW);
 }
 
+void InitializeButtons(HWND hWnd, HINSTANCE hInstance, int buttonWidth, int buttonHeight, int Incline)
+{
+	buttonIncline = Incline;
+	//menu buttons
+	buttonPlay = CreateWindow("button", "PLAY", WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | BS_PUSHBUTTON | BS_OWNERDRAW, WindowWidth / 2 - buttonWidth/2, WindowHeight / 2 - buttonHeight - (buttonHeight/2 + 20), buttonWidth, buttonHeight, hWnd, (HMENU)BUTTON_PLAY_ID, hInstance, NULL);
+	buttonHelp = CreateWindow("button", "HELP", WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | BS_PUSHBUTTON | BS_OWNERDRAW, WindowWidth / 2 - buttonWidth / 2, WindowHeight / 2 - buttonHeight/2, buttonWidth, buttonHeight, hWnd, (HMENU)BUTTON_HELP_ID, hInstance, NULL);
+	buttonExit = CreateWindow("button", "EXIT", WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | BS_PUSHBUTTON | BS_OWNERDRAW, WindowWidth / 2 - buttonWidth / 2, WindowHeight / 2 + buttonHeight/2 + 20, buttonWidth, buttonHeight, hWnd, (HMENU)BUTTON_EXIT_ID, hInstance, NULL);
+	//mode buttons
+	buttonOnePlayer = CreateWindow("button", "ONE PLAYER",  WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | BS_PUSHBUTTON | BS_OWNERDRAW, WindowWidth / 2 - buttonWidth / 2, WindowHeight / 2 - buttonHeight - 20, buttonWidth, buttonHeight, hWnd, (HMENU)BUTTON_ONE_PLAYER_ID, hInstance, NULL);
+	buttonTwoPlayer = CreateWindow("button", "TWO PLAYERS", WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | BS_PUSHBUTTON | BS_OWNERDRAW, WindowWidth / 2 - buttonWidth / 2, WindowHeight / 2, buttonWidth, buttonHeight, hWnd, (HMENU)BUTTON_TWO_PLAYER_ID, hInstance, NULL);
+	//difficulty buttons
+	buttonEasy = CreateWindow("button", "EASY", WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | BS_PUSHBUTTON | BS_OWNERDRAW, WindowWidth / 2 - buttonWidth / 2, WindowHeight / 2 - buttonHeight - (buttonHeight / 2 + 20), buttonWidth, buttonHeight, hWnd, (HMENU)BUTTON_EASY_ID, hInstance, NULL);
+	buttonNormal = CreateWindow("button", "NORMAL", WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | BS_PUSHBUTTON | BS_OWNERDRAW, WindowWidth / 2 - buttonWidth / 2, WindowHeight / 2 - buttonHeight/2, buttonWidth, buttonHeight, hWnd, (HMENU)BUTTON_NORMAL_ID, hInstance, NULL);
+	buttonHard = CreateWindow("button", "HARD", WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | BS_PUSHBUTTON | BS_OWNERDRAW, WindowWidth / 2 - buttonWidth / 2, WindowHeight / 2 + buttonHeight/2 + 20, buttonWidth, buttonHeight, hWnd, (HMENU)BUTTON_HARD_ID, hInstance, NULL);
+}
+
+void RedrawButton(HWND button,LPCSTR text,int textLength)
+{
+	RECT rect;
+	HRGN region;
+	HFONT buttonFont = CreateFont(30, 15, 0, 0, FW_DONTCARE, FALSE, FALSE,
+		FALSE, DEFAULT_CHARSET, OUT_OUTLINE_PRECIS,
+		CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, VARIABLE_PITCH,
+		TEXT("SlantCYRILLIC"));
+
+	//get button form
+	GetWindowRect(button, &rect);
+	region = CreateButtonForm(rect.right-rect.left,rect.bottom-rect.top,buttonIncline);
+	//create button form
+	HDC hdc = GetDC(button);
+	SelectObject(hdc, buttonFont);
+	SetBkMode(hdc, TRANSPARENT);
+	TextOut(hdc, 50, 0, text, textLength);
+	SetWindowRgn(button, region, true);
+	UpdateWindow(button);
+	ReleaseDC(button, hdc);
+	DeleteObject(buttonFont);
+}
+
 //message handler
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
 	HDC hdc;
 	static HBRUSH solidBrush = CreateSolidBrush(RGB(0, 255, 0));
-
 	PAINTSTRUCT ps;
 	int fwKeys;
 	int MB_RESULT;
-	
+
 	switch (message)
 	{	
+	//ownerdraw buttons
+	case WM_DRAWITEM:
+	{	
+		switch (wParam)
+		{
+		case BUTTON_PLAY_ID:
+			RedrawButton(buttonPlay, "PLAY", 4);
+			break;
+		case BUTTON_HELP_ID:
+			RedrawButton(buttonHelp, "HELP", 4);
+			break;
+		case BUTTON_EXIT_ID:
+			RedrawButton(buttonExit, "EXIT", 4);
+			break;
+		case BUTTON_ONE_PLAYER_ID:
+			RedrawButton(buttonOnePlayer, "ONE PLAYER", 10);
+			break;
+		case BUTTON_TWO_PLAYER_ID:
+			RedrawButton(buttonTwoPlayer, "TWO PLAYERS", 11);
+			break;
+		case BUTTON_EASY_ID:
+			RedrawButton(buttonEasy, "EASY", 4);
+			break;
+		case BUTTON_NORMAL_ID:
+			RedrawButton(buttonNormal, "NORMAL", 6);
+			break;
+		case BUTTON_HARD_ID:
+			RedrawButton(buttonHard, "HARD", 4);
+			break;
+		}	
+	}
+	break;
+	//buttons commands
 	case WM_COMMAND:
 		switch (wParam)
 		{
@@ -143,7 +232,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		break;
 
 	//repaint message
-	case WM_PAINT:
+	/*case WM_PAINT:
 		hdc = BeginPaint(hWnd, &ps);
 
 		RECT rect;
@@ -155,7 +244,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			
 		ReleaseDC(hWnd, hdc);
 		EndPaint(hWnd, &ps);
-		break;
+		break;*/
 	//closing window
 	case WM_CLOSE:
 		MB_RESULT = MessageBox(hWnd, "Do you really want to exit ?", "Exit", MB_YESNO);
@@ -164,28 +253,15 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		break;
 	//destroy window
 	case WM_DESTROY:
+	{
 		DeleteObject(solidBrush);
 		PostQuitMessage(0);
+	}
 		break;
 	default:
 		return DefWindowProc(hWnd, message, wParam, lParam);
 	}
 	return 0;
-}
-
-void InitializeButtons(HWND hWnd,HINSTANCE hInstance)
-{
-	//menu buttins
-	buttonPlay = CreateWindow("button", "PLAY", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, WindowWidth / 2 - 130, WindowHeight / 2 - 100 - 70, 260, 100, hWnd, (HMENU)BUTTON_PLAY_ID, hInstance, NULL);
-	buttonHelp = CreateWindow("button", "HELP", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, WindowWidth / 2 - 130, WindowHeight / 2 - 50, 260, 100, hWnd, (HMENU)BUTTON_HELP_ID, hInstance, NULL);
-	buttonExit = CreateWindow("button", "EXIT", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, WindowWidth / 2 - 130, WindowHeight / 2 + 50 + 20, 260, 100, hWnd, (HMENU)BUTTON_EXIT_ID, hInstance, NULL);
-	//mode buttons
-	buttonOnePlayer = CreateWindow("button", "ONE PLAYER", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, WindowWidth / 2 - 125, WindowHeight / 2 - 100 - 20, 260, 100, hWnd, (HMENU)BUTTON_ONE_PLAYER_ID, hInstance, NULL);
-	buttonTwoPlayer = CreateWindow("button", "TWO PLAYERS", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, WindowWidth / 2 - 125, WindowHeight / 2, 260, 100, hWnd, (HMENU)BUTTON_TWO_PLAYER_ID, hInstance, NULL);
-	//difficulty buttons
-	buttonEasy = CreateWindow("button", "EASY", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, WindowWidth / 2 - 130, WindowHeight / 2 - 100 - 70, 260, 100, hWnd, (HMENU)BUTTON_EASY_ID, hInstance, NULL);
-	buttonNormal = CreateWindow("button", "NORMAL", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, WindowWidth / 2 - 130, WindowHeight / 2 - 50, 260, 100, hWnd, (HMENU)BUTTON_NORMAL_ID, hInstance, NULL);
-	buttonHard = CreateWindow("button", "HARD", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, WindowWidth / 2 - 130, WindowHeight / 2 + 50 + 20, 260, 100, hWnd, (HMENU)BUTTON_HARD_ID, hInstance, NULL);
 }
 
 int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdLine, int nCmdShow)
@@ -194,10 +270,10 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdL
 	HWND hWnd;
 	MSG msg;
 
-	HFONT buttonFont = CreateFont(30, 15, 0, 0, FW_DONTCARE, FALSE, FALSE,
+	/*HFONT buttonFont = CreateFont(30, 15, 0, 0, FW_DONTCARE, FALSE, FALSE,
 		FALSE, DEFAULT_CHARSET, OUT_OUTLINE_PRECIS,
 		CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, VARIABLE_PITCH,
-		TEXT("Times New Roman"));
+		TEXT("SlantCYRILLIC"));*/
 
 	//window class initialization
 	wcex.cbSize = sizeof(WNDCLASSEX);
@@ -213,15 +289,15 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdL
 	wcex.lpszClassName = "PongGame";
 	wcex.hIconSm = wcex.hIcon;
 	RegisterClassEx(&wcex);//window registration
-
+	
 	//window creation
 	hWnd = CreateWindow("PongGame", "The Game Pong",
 		WS_OVERLAPPED | WS_SYSMENU | WS_MINIMIZEBOX, CW_USEDEFAULT, 0,
 		CW_USEDEFAULT, 0, NULL, NULL, hInstance, NULL);
 	
 	//buttons creation
-	InitializeButtons(hWnd, hInstance);
-		
+	InitializeButtons(hWnd, hInstance,260,100,30);
+	/*	
 	//set buttons font
 	SetButtonFont(buttonPlay, buttonFont);
 	SetButtonFont(buttonHelp, buttonFont);
@@ -230,13 +306,14 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdL
 	SetButtonFont(buttonTwoPlayer, buttonFont);
 	SetButtonFont(buttonEasy, buttonFont);
 	SetButtonFont(buttonNormal, buttonFont);
-	SetButtonFont(buttonHard, buttonFont);
+	SetButtonFont(buttonHard, buttonFont);*/
 
 	//set window size
 	MoveWindow(hWnd, 150, 100, WindowWidth, WindowHeight, NULL);
 	
 	//show menu
 	ShowMainMenu();
+
 	//show window
 	ShowWindow(hWnd, nCmdShow);
 	UpdateWindow(hWnd);
