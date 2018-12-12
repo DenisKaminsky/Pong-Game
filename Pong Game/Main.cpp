@@ -173,7 +173,7 @@ void ShowGameResult(HWND hWnd,LPCSTR gameResult,int length)
 	ShowWindow(buttonMainMenu, SW_SHOW);
 
 	hdc = GetDC(hWnd);
-	PrintTextToScreen(hdc, WindowWidth / 2 - 60 , 220, gameResult, length, RGB(255, 0, 0),hFont);
+	PrintTextToScreen(hdc, WindowWidth / 2 - (length*28)/2 , 220, gameResult, length, RGB(255, 0, 0),hFont);
 	sDC = CreateCompatibleDC(hdc);//создаем контекст устройства в памяти , совместимый с данным устройством
 	prevobj = SelectObject(sDC, hBitmap);
 	bitmapSize = GetBitmapSize(hBitmap);
@@ -417,7 +417,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdL
 	UpdateWindow(hWnd);
 	//show menu
 	ShowMainMenu(hWnd);
-	ShowGameResult(hWnd, "YOU WIN", 7);
+	ShowGameResult(hWnd, "PLAYER 1 WIN", 12);
 	//recieve message
 	while (GetMessage(&msg, NULL, 0, 0))
 	{
