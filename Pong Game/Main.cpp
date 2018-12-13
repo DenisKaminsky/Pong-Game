@@ -25,9 +25,9 @@ HWND buttonPlay, buttonExit, buttonHelp;//main menu button
 HWND buttonOnePlayer, buttonTwoPlayer; //choose mode menu
 HWND buttonEasy, buttonNormal, buttonHard;//choose difficulty
 HWND buttonRepeat, buttonMainMenu; //game result;
-HWND dialogBox;
 HFONT hFont;
 HBITMAP hBitmap;
+Graphics* graphics;
 
 int currentMenuId;
 
@@ -160,6 +160,22 @@ void ShowDifficultyMenu(HWND hWnd)
 	ReleaseDC(hWnd, hdc);
 }
 
+void ShowGamefield(HWND hWnd)
+{
+	//SetTimer(hWnd, 1, 50,NULL);
+	currentMenuId = RESULT_MENU_ID;
+	ShowWindow(buttonPlay, SW_HIDE);
+	ShowWindow(buttonHelp, SW_HIDE);
+	ShowWindow(buttonExit, SW_HIDE);
+	ShowWindow(buttonOnePlayer, SW_HIDE);
+	ShowWindow(buttonTwoPlayer, SW_HIDE);
+	ShowWindow(buttonEasy, SW_HIDE);
+	ShowWindow(buttonNormal, SW_HIDE);
+	ShowWindow(buttonHard, SW_HIDE);
+	ShowWindow(buttonRepeat, SW_HIDE);
+	ShowWindow(buttonMainMenu, SW_HIDE);
+}
+
 void ShowGameResult(HWND hWnd,LPCSTR gameResult,int length)
 {
 	HDC hdc, sDC;
@@ -183,6 +199,14 @@ void ShowGameResult(HWND hWnd,LPCSTR gameResult,int length)
 	SelectObject(sDC, prevobj);
 	DeleteDC(sDC);
 	ReleaseDC(hWnd, hdc);
+}
+
+void DrawSomething(HWND hWnd,int x,int y)
+{
+	graphics->BeginDraw();
+	graphics->ClearScreen(0,0,0);
+	graphics->DrawCircle(x, y, 50, 0, 0, 1,5);
+	graphics->EndDraw();
 }
 
 void InitializeButtons(HWND hWnd, HINSTANCE hInstance, int buttonWidth, int buttonHeight, int Incline)
@@ -236,6 +260,7 @@ void RedrawButton(HWND button,LPCSTR text,int textLength)
 //message handler
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
+	HDC hdc;
 	static HBRUSH solidBrush = CreateSolidBrush(RGB(0, 255, 0));
 	PAINTSTRUCT ps;
 	int MB_RESULT;
@@ -290,16 +315,16 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		case BUTTON_ONE_PLAYER_ID:
 			ShowDifficultyMenu(hWnd);
 			break;
-		case BUTTON_TWO_PLAYER_ID:			
+		case BUTTON_TWO_PLAYER_ID:
+			DrawSomething(hWnd,posX,posY);
 			break;
-		case BUTTON_EASY_ID:
+		case BUTTON_EASY_ID:			
 			//SetFocus(hWnd);
 			break;
 		case BUTTON_NORMAL_ID:
 			//SetFocus(hWnd);
 			break;
 		case BUTTON_HARD_ID:
-			ShowWindow(dialogBox, SW_SHOW);
 			//SetFocus(hWnd);
 			break;
 		case BUTTON_HELP_ID:
@@ -319,10 +344,26 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	case WM_KEYDOWN: // Обработка нажатия клавиши
 	{
 		bool needUpdate = false;
+		if (wParam == 68 || wParam == 39) //вправо
+		{
+			posX += speed;
+			needUpdate = true;
+		}
+		if (wParam == 65 || wParam == 37) //влево
+		{
+			posX -= speed;
+			needUpdate = true;
+		}
 		if (wParam == 83 || wParam == 40) //вниз
+		{
 			posY += speed;
+			needUpdate = true;
+		}
 		if (wParam == 87 || wParam == 38) //вверх
+		{
 			posY -= speed;
+			needUpdate = true;
+		}
 		if (wParam == 27) //если нажали ESC то выходим 
 		{
 			//SendMessage(hWnd, WM_CLOSE, wParam, lParam);
@@ -342,20 +383,28 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			InvalidateRect(hWnd, NULL, TRUE);
 	}
 	break;
+	case WM_TIMER:
+		posX+=20;
+		//posY+=20;
+		graphics->BeginDraw();
+		graphics->ClearScreen(0, 0, 0);
+		//graphics->DrawCircle(posX, posY, 50, 0, 0, 1, 1);
+		graphics->DrawRectangle(posX, posY, 20, 100, 0, 0, 1, 1);
+		graphics->EndDraw();
+		//DrawSomething(hWnd, posX, posY);
+		//InvalidateRect(hWnd, NULL, TRUE);
+		break;
 	//repaint message
-	/*case WM_PAINT:
+	case WM_PAINT:
 		hdc = BeginPaint(hWnd, &ps);
-
-		RECT rect;
-		rect.top = posY;
-		rect.left = posX;
-		rect.right = posX + BoardWidth;
-		rect.bottom = posY + BoardHeight;
-		FillRect(hdc, &rect, solidBrush);
-
+		graphics->BeginDraw();
+		graphics->ClearScreen(0, 0, 0);
+		//graphics->DrawCircle(posX, posY, 50, 0, 0, 1, 1);
+		graphics->DrawRectangle(posX, posY, 20, 100, 0, 0, 1, 1);
+		graphics->EndDraw();
 		ReleaseDC(hWnd, hdc);
 		EndPaint(hWnd, &ps);
-		break;*/
+		break;
 	//closing window
 	case WM_CLOSE:
 		MB_RESULT = MessageBox(hWnd, "Do you really want to exit ?", "Exit", MB_YESNO);
@@ -367,6 +416,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	{
 		DeleteObject(solidBrush);
 		DeleteObject(hFont);
+		delete graphics;
 		PostQuitMessage(0);
 	}
 		break;
@@ -413,14 +463,17 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdL
 	//buttons creation
 	InitializeButtons(hWnd, hInstance,260,80,30);
 	//set window size
-	MoveWindow(hWnd, 150, 100, WindowWidth, WindowHeight, NULL);	
-	
+	MoveWindow(hWnd, 150, 100, WindowWidth, WindowHeight, NULL);
+	//graphics create
+	graphics = new Graphics();
+	graphics->Init(hWnd);
 	//show window
 	ShowWindow(hWnd, nCmdShow);
 	UpdateWindow(hWnd);
 	//show menu
-	ShowMainMenu(hWnd);
-	ShowGameResult(hWnd, "PLAYER 1 WIN", 12);
+	ShowGamefield(hWnd);
+	//ShowMainMenu(hWnd);
+	//ShowGameResult(hWnd, "PLAYER 1 WIN", 12);
 	//recieve message
 	while (GetMessage(&msg, NULL, 0, 0))
 	{
