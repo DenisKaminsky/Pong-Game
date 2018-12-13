@@ -1,4 +1,6 @@
 #include "Gameplay.h"
+#include <string.h>
+#include <stdio.h>
 
 #define TIMER_ID 666
 #define EXIT_COMMAND 9000
@@ -20,7 +22,11 @@ int rBoardSpeed;
 int rBoardHeight;
 //boards width
 int boardWidth;
+//border
+int borderHeight = 38;
 
+int lPlayerPoints = 0;
+int rPlayerPoints = 0;
 int windowHeight = 0;
 int windowWidth = 0;
 
@@ -50,32 +56,34 @@ void BoardLimit(POINT &boardPosition,int boardHeight)
 		boardPosition.y = windowHeight - boardHeight;
 }
 
-VOID CALLBACK TimerProc(HWND hWnd, UINT uMessage, UINT_PTR uEventId, DWORD dwTime)
-{	
-	graphics->BeginDraw();
-	graphics->ClearScreen(0, 0, 0);
-	//drawBall
-	graphics->DrawCircle(ballPosition.x, ballPosition.y, ballRadius, 0, 0, 1, 1);
-	//drawLBoard
-	graphics->DrawRectangle(lBoardPosition.x, lBoardPosition.y, boardWidth, lBoardHeight, 255, 0, 0, 1);
-	//drawRBoard
-	graphics->DrawRectangle(rBoardPosition.x, rBoardPosition.y, boardWidth, rBoardHeight, 255, 0, 0, 1);
-
-	BallBounceFromBoundary();
-	//here boards and ball contact physics
-	BoardLimit(lBoardPosition, lBoardHeight);
+void RBoardMoveDown()
+{
+	rBoardPosition.y += rBoardSpeed;
 	BoardLimit(rBoardPosition, rBoardHeight);
-	BallOutOfField();
-	ballPosition.x += ballSpeed.x;
-	ballPosition.y += ballSpeed.y;
-
-	graphics->EndDraw();
 }
 
-void SetGameParameters(int difficulty,int bRadius,int bWidth,int lbHeight,int rbHeight,int rbSpeed)
+void RBoardMoveUp()
+{
+	rBoardPosition.y -= rBoardSpeed;
+	BoardLimit(rBoardPosition, rBoardHeight);
+}
+
+void LBoardMoveDown()
+{
+	lBoardPosition.y += lBoardSpeed;
+}
+
+void LBoardMoveUp()
+{
+	lBoardPosition.y -= lBoardSpeed;
+}
+
+void SetGameParameters(int difficulty, int bRadius, int bWidth, int lbHeight, int rbHeight, int rbSpeed)
 {
 	RECT rect;
 
+	lPlayerPoints = 0;
+	rPlayerPoints = 0;
 	GetClientRect(hWnd, &rect);
 	windowHeight = rect.bottom - rect.top;
 	windowWidth = rect.right - rect.left;
@@ -99,6 +107,35 @@ void SetGameParameters(int difficulty,int bRadius,int bWidth,int lbHeight,int rb
 		ballSpeed.x = 1;
 		lBoardSpeed = rbSpeed;
 	}
+}
+
+VOID CALLBACK TimerProc(HWND hWnd, UINT uMessage, UINT_PTR uEventId, DWORD dwTime)
+{	
+	graphics->BeginDraw();
+	graphics->ClearScreen(0, 0, 0);
+	//drawBall
+	graphics->DrawCircle(ballPosition.x, ballPosition.y, ballRadius, 0, 0, 1, 1);
+	//drawLBoard
+	graphics->DrawRoundRectangle(lBoardPosition.x, lBoardPosition.y, boardWidth, lBoardHeight, 255, 0, 0, 1);
+	//drawRBoard
+	graphics->DrawRoundRectangle(rBoardPosition.x, rBoardPosition.y, boardWidth, rBoardHeight, 255, 0, 0, 1);
+	//drawBorders
+	graphics->DrawRectangle(0,0, windowWidth, borderHeight, 255, 255, 155, 1);
+	graphics->DrawRectangle(0,windowHeight-borderHeight, windowWidth, borderHeight,255, 255, 155, 1);
+	graphics->DrawString(L"6", 1, windowWidth/2-25, 1, 20, 20,40, 255, 0, 0, 1);
+	graphics->DrawString(L":", 1, windowWidth/2+2,1, 1, 20,40, 255, 0, 0, 1);
+	graphics->DrawString(L"5", 1, windowWidth/2+15, 1, 20, 20,40, 255, 0, 0, 1);
+	
+	ballPosition.x += ballSpeed.x;
+	ballPosition.y += ballSpeed.y;
+
+	BallBounceFromBoundary();
+	//here boards and ball contact physics
+	BoardLimit(lBoardPosition, lBoardHeight);
+	//BoardLimit(rBoardPosition, rBoardHeight);
+	BallOutOfField();
+
+	graphics->EndDraw();
 }
 
 void StartGame(HWND hwnd,bool isWithBotMode,int difficulty)

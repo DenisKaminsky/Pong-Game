@@ -1,6 +1,4 @@
 #define _USE_MATH_DEFINES
-#include <windows.h>
-#include <math.h>
 #include "Gameplay.h"
 #include <gdiplus.h>
 #pragma comment(lib,"gdiplus.lib")
@@ -36,7 +34,7 @@ const int BoardWidth = 100;
 const int WindowHeight = 700;
 const int WindowWidth = 1200;
 int buttonIncline;
-bool isExit;
+bool inGame;
 
 void SetButtonFont(HWND hWnd,HFONT hFont)
 {
@@ -167,7 +165,7 @@ void ShowGameField(HWND hWnd,bool withBot,int difficulty)
 	ShowWindow(buttonHard, SW_HIDE);
 	ShowWindow(buttonRepeat, SW_HIDE);
 	ShowWindow(buttonMainMenu, SW_HIDE);
-	isExit = false;
+	inGame = true;
 	StartGame(hWnd, withBot, difficulty);
 }
 
@@ -326,29 +324,24 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			ShowMainMenu(hWnd);
 			break;
 		case EXIT_GAME_COMMAND:
-			isExit = true;
+			inGame = false;
 			ShowGameResult(hWnd, "PLAYER 1 WIN", 12);
 			break;
 		}
 		break;
 	//message from keybord
-	case WM_KEYDOWN: // Обработка нажатия клавиши
+	case WM_KEYDOWN:
 	{
-		if (wParam == 68 || wParam == 39) //вправо
+		if (inGame)
 		{
-			//posX += speed;
-		}
-		if (wParam == 65 || wParam == 37) //влево
-		{
-			//posX -= speed;
-		}
-		if (wParam == 83 || wParam == 40) //вниз
-		{
-			//posY += speed;
-		}
-		if (wParam == 87 || wParam == 38) //вверх
-		{
-			//posY -= speed;
+			if (wParam == 38)//right up
+				RBoardMoveUp();
+			if (wParam == 40)//right down
+				RBoardMoveDown();
+			if (wParam == 87)//left up
+				LBoardMoveUp();
+			if (wParam == 83)//left down
+				LBoardMoveDown();
 		}
 		if (wParam == 27) //если нажали ESC то выходим 
 		{
@@ -378,7 +371,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	//destroy window
 	case WM_DESTROY:
 	{
-		if (!isExit)
+		if (inGame)
 			DeleteGameParams();
 		DeleteObject(solidBrush);
 		DeleteObject(hFont);
