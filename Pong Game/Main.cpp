@@ -1,7 +1,6 @@
 #define _USE_MATH_DEFINES
 #include <windows.h>
 #include <math.h>
-//#include "Graphics.h"
 #include "Gameplay.h"
 #include <gdiplus.h>
 #pragma comment(lib,"gdiplus.lib")
@@ -304,16 +303,16 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			ShowDifficultyMenu(hWnd);
 			break;
 		case BUTTON_TWO_PLAYER_ID:
-			ShowGameField(hWnd,false,0);
+			ShowGameField(hWnd,false,1);
 			break;
 		case BUTTON_EASY_ID:			
-			//SetFocus(hWnd);
+			ShowGameField(hWnd, true, 1);
 			break;
 		case BUTTON_NORMAL_ID:
-			//SetFocus(hWnd);
+			ShowGameField(hWnd, true, 2);
 			break;
 		case BUTTON_HARD_ID:
-			//SetFocus(hWnd);
+			ShowGameField(hWnd, true, 3);
 			break;
 		case BUTTON_HELP_ID:
 			MessageBox(hWnd, "gg \nnoob", "HELP", MB_OK);			
@@ -335,26 +334,21 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	//message from keybord
 	case WM_KEYDOWN: // Обработка нажатия клавиши
 	{
-		bool needUpdate = false;
 		if (wParam == 68 || wParam == 39) //вправо
 		{
 			//posX += speed;
-			needUpdate = true;
 		}
 		if (wParam == 65 || wParam == 37) //влево
 		{
 			//posX -= speed;
-			needUpdate = true;
 		}
 		if (wParam == 83 || wParam == 40) //вниз
 		{
 			//posY += speed;
-			needUpdate = true;
 		}
 		if (wParam == 87 || wParam == 38) //вверх
 		{
 			//posY -= speed;
-			needUpdate = true;
 		}
 		if (wParam == 27) //если нажали ESC то выходим 
 		{
@@ -371,16 +365,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 				break;
 			}
 		}
-		if (needUpdate)
-			InvalidateRect(hWnd, NULL, TRUE);
 	}
 	break;
-	//repaint message
-	case WM_PAINT:
-		hdc = BeginPaint(hWnd, &ps);
-		ReleaseDC(hWnd, hdc);
-		EndPaint(hWnd, &ps);
-		break;
 	//closing window
 	case WM_CLOSE:
 		MB_RESULT = MessageBox(hWnd, "Do you really want to exit ?", "Exit", MB_YESNO);
