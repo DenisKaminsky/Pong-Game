@@ -1,7 +1,8 @@
 #define _USE_MATH_DEFINES
 #include <windows.h>
 #include <math.h>
-#include "Graphics.h"
+//#include "Graphics.h"
+#include "Gameplay.h"
 #include <gdiplus.h>
 #pragma comment(lib,"gdiplus.lib")
 
@@ -20,6 +21,7 @@
 #define BUTTON_HARD_ID 10007
 #define BUTTON_REPEAT_ID 10008
 #define BUTTON_MAIN_MENU_ID 10009
+#define EXIT_GAME_COMMAND 9000
 
 HWND buttonPlay, buttonExit, buttonHelp;//main menu button
 HWND buttonOnePlayer, buttonTwoPlayer; //choose mode menu
@@ -27,19 +29,15 @@ HWND buttonEasy, buttonNormal, buttonHard;//choose difficulty
 HWND buttonRepeat, buttonMainMenu; //game result;
 HFONT hFont;
 HBITMAP hBitmap;
-Graphics* graphics;
 
 int currentMenuId;
 
-int posX = 1;
-int posY = 1;
-
-const int speed = 10;
 const int BoardHeight = 100;
 const int BoardWidth = 100;
 const int WindowHeight = 700;
 const int WindowWidth = 1200;
 int buttonIncline;
+bool isExit;
 
 void SetButtonFont(HWND hWnd,HFONT hFont)
 {
@@ -160,13 +158,9 @@ void ShowDifficultyMenu(HWND hWnd)
 	ReleaseDC(hWnd, hdc);
 }
 
-void ShowGamefield(HWND hWnd)
+void ShowGameField(HWND hWnd,bool withBot,int difficulty)
 {
-	//SetTimer(hWnd, 1, 50,NULL);
 	currentMenuId = RESULT_MENU_ID;
-	ShowWindow(buttonPlay, SW_HIDE);
-	ShowWindow(buttonHelp, SW_HIDE);
-	ShowWindow(buttonExit, SW_HIDE);
 	ShowWindow(buttonOnePlayer, SW_HIDE);
 	ShowWindow(buttonTwoPlayer, SW_HIDE);
 	ShowWindow(buttonEasy, SW_HIDE);
@@ -174,6 +168,8 @@ void ShowGamefield(HWND hWnd)
 	ShowWindow(buttonHard, SW_HIDE);
 	ShowWindow(buttonRepeat, SW_HIDE);
 	ShowWindow(buttonMainMenu, SW_HIDE);
+	isExit = false;
+	StartGame(hWnd, withBot, difficulty);
 }
 
 void ShowGameResult(HWND hWnd,LPCSTR gameResult,int length)
@@ -199,14 +195,6 @@ void ShowGameResult(HWND hWnd,LPCSTR gameResult,int length)
 	SelectObject(sDC, prevobj);
 	DeleteDC(sDC);
 	ReleaseDC(hWnd, hdc);
-}
-
-void DrawSomething(HWND hWnd,int x,int y)
-{
-	graphics->BeginDraw();
-	graphics->ClearScreen(0,0,0);
-	graphics->DrawCircle(x, y, 50, 0, 0, 1,5);
-	graphics->EndDraw();
 }
 
 void InitializeButtons(HWND hWnd, HINSTANCE hInstance, int buttonWidth, int buttonHeight, int Incline)
@@ -316,7 +304,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			ShowDifficultyMenu(hWnd);
 			break;
 		case BUTTON_TWO_PLAYER_ID:
-			DrawSomething(hWnd,posX,posY);
+			ShowGameField(hWnd,false,0);
 			break;
 		case BUTTON_EASY_ID:			
 			//SetFocus(hWnd);
@@ -338,6 +326,10 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		case BUTTON_MAIN_MENU_ID:
 			ShowMainMenu(hWnd);
 			break;
+		case EXIT_GAME_COMMAND:
+			isExit = true;
+			ShowGameResult(hWnd, "PLAYER 1 WIN", 12);
+			break;
 		}
 		break;
 	//message from keybord
@@ -346,27 +338,27 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		bool needUpdate = false;
 		if (wParam == 68 || wParam == 39) //вправо
 		{
-			posX += speed;
+			//posX += speed;
 			needUpdate = true;
 		}
 		if (wParam == 65 || wParam == 37) //влево
 		{
-			posX -= speed;
+			//posX -= speed;
 			needUpdate = true;
 		}
 		if (wParam == 83 || wParam == 40) //вниз
 		{
-			posY += speed;
+			//posY += speed;
 			needUpdate = true;
 		}
 		if (wParam == 87 || wParam == 38) //вверх
 		{
-			posY -= speed;
+			//posY -= speed;
 			needUpdate = true;
 		}
 		if (wParam == 27) //если нажали ESC то выходим 
 		{
-			//SendMessage(hWnd, WM_CLOSE, wParam, lParam);
+			StopGame();
 		}
 		if (wParam == 8) //press BackSpace to Go Back
 		{
@@ -383,25 +375,9 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			InvalidateRect(hWnd, NULL, TRUE);
 	}
 	break;
-	case WM_TIMER:
-		posX+=20;
-		//posY+=20;
-		graphics->BeginDraw();
-		graphics->ClearScreen(0, 0, 0);
-		//graphics->DrawCircle(posX, posY, 50, 0, 0, 1, 1);
-		graphics->DrawRectangle(posX, posY, 20, 100, 0, 0, 1, 1);
-		graphics->EndDraw();
-		//DrawSomething(hWnd, posX, posY);
-		//InvalidateRect(hWnd, NULL, TRUE);
-		break;
 	//repaint message
 	case WM_PAINT:
 		hdc = BeginPaint(hWnd, &ps);
-		graphics->BeginDraw();
-		graphics->ClearScreen(0, 0, 0);
-		//graphics->DrawCircle(posX, posY, 50, 0, 0, 1, 1);
-		graphics->DrawRectangle(posX, posY, 20, 100, 0, 0, 1, 1);
-		graphics->EndDraw();
 		ReleaseDC(hWnd, hdc);
 		EndPaint(hWnd, &ps);
 		break;
@@ -409,17 +385,20 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	case WM_CLOSE:
 		MB_RESULT = MessageBox(hWnd, "Do you really want to exit ?", "Exit", MB_YESNO);
 		if (MB_RESULT == 6)
+		{
 			SendMessage(hWnd, WM_DESTROY, wParam, lParam);
+		}
 		break;
 	//destroy window
 	case WM_DESTROY:
 	{
+		if (!isExit)
+			DeleteGameParams();
 		DeleteObject(solidBrush);
 		DeleteObject(hFont);
-		delete graphics;
 		PostQuitMessage(0);
 	}
-		break;
+	break;
 	default:
 		return DefWindowProc(hWnd, message, wParam, lParam);
 	}
@@ -464,21 +443,17 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdL
 	InitializeButtons(hWnd, hInstance,260,80,30);
 	//set window size
 	MoveWindow(hWnd, 150, 100, WindowWidth, WindowHeight, NULL);
-	//graphics create
-	graphics = new Graphics();
-	graphics->Init(hWnd);
 	//show window
 	ShowWindow(hWnd, nCmdShow);
 	UpdateWindow(hWnd);
 	//show menu
-	ShowGamefield(hWnd);
-	//ShowMainMenu(hWnd);
-	//ShowGameResult(hWnd, "PLAYER 1 WIN", 12);
+	ShowMainMenu(hWnd);
 	//recieve message
 	while (GetMessage(&msg, NULL, 0, 0))
 	{
 		TranslateMessage(&msg);
 		DispatchMessage(&msg);
 	}
+
 	return (int)msg.wParam;
 }
