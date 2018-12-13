@@ -1,6 +1,7 @@
 #define _USE_MATH_DEFINES
 #include <windows.h>
 #include <math.h>
+#include "Graphics.h"
 #include <gdiplus.h>
 #pragma comment(lib,"gdiplus.lib")
 
@@ -24,6 +25,7 @@ HWND buttonPlay, buttonExit, buttonHelp;//main menu button
 HWND buttonOnePlayer, buttonTwoPlayer; //choose mode menu
 HWND buttonEasy, buttonNormal, buttonHard;//choose difficulty
 HWND buttonRepeat, buttonMainMenu; //game result;
+HWND dialogBox;
 HFONT hFont;
 HBITMAP hBitmap;
 
@@ -297,6 +299,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			//SetFocus(hWnd);
 			break;
 		case BUTTON_HARD_ID:
+			ShowWindow(dialogBox, SW_SHOW);
 			//SetFocus(hWnd);
 			break;
 		case BUTTON_HELP_ID:
