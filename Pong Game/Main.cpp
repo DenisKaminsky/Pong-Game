@@ -166,7 +166,7 @@ void ShowGameField(HWND hWnd,bool withBot,int difficulty)
 	ShowWindow(buttonRepeat, SW_HIDE);
 	ShowWindow(buttonMainMenu, SW_HIDE);
 	inGame = true;
-	StartGame(hWnd, withBot, difficulty);
+	StartGame(hWnd,withBot, difficulty);
 }
 
 void ShowGameResult(HWND hWnd,LPCSTR gameResult,int length)
@@ -371,8 +371,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	//destroy window
 	case WM_DESTROY:
 	{
-		if (inGame)
-			DeleteGameParams();
+		DeleteGame();
 		DeleteObject(solidBrush);
 		DeleteObject(hFont);
 		PostQuitMessage(0);
@@ -427,6 +426,8 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdL
 	UpdateWindow(hWnd);
 	//show menu
 	ShowMainMenu(hWnd);
+	//init game
+	InitializeGame(hWnd);
 	//recieve message
 	while (GetMessage(&msg, NULL, 0, 0))
 	{

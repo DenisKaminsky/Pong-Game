@@ -22,7 +22,7 @@ Graphics::~Graphics()
 bool Graphics::Init(HWND windowHandle)
 {
 	RECT rect;
-	HRESULT res = D2D1CreateFactory(D2D1_FACTORY_TYPE_SINGLE_THREADED, &factory);//creaye single thread factory
+	HRESULT res = D2D1CreateFactory(D2D1_FACTORY_TYPE_SINGLE_THREADED, &factory);//create single thread factory
 	
 	if (res != S_OK)
 		return false;
@@ -41,6 +41,7 @@ bool Graphics::Init(HWND windowHandle)
 	return true;
 }
 
+//redraw region
 void Graphics::ClearScreen(float r, float g, float b)
 {
 	renderTarget->Clear(D2D1::ColorF(r, g, b));
@@ -71,10 +72,9 @@ void Graphics::DrawRectangle(float x, float y, float width, float height, float 
 	renderTarget->CreateSolidColorBrush(D2D1::ColorF(r, g, b, a), &brush);
 	renderTarget->FillRectangle(D2D1::Rect(x, y, x + width, y + height), brush);
 	brush->Release();
-	//renderTarget->DrawTextA(text, length, ,D2D1::Rect(x, y, x + width, y + height), brush);
 }
 
-void Graphics::DrawString(LPWSTR text,int length,float x,float y,float width,float height,float fontSize,float r, float g, float b, float a)
+void Graphics::DrawString(const wchar_t* text,int length,float x,float y,float width,float height,float fontSize,float r, float g, float b, float a)
 {
 	ID2D1SolidColorBrush* brush;
 	IDWriteFactory* dwFactory;
@@ -91,13 +91,13 @@ void Graphics::DrawString(LPWSTR text,int length,float x,float y,float width,flo
 	dwFactory->Release();
 }
 
-void Graphics::DrawImage(LPWSTR fileName, float x, float y, float width, float height)
+void Graphics::LoadImageFromFile(LPWSTR fileName)
 {
 	IWICImagingFactory* WICFactory;
 	IWICBitmapDecoder *WICDecoder = NULL;
 	IWICBitmapFrameDecode *pFrame = NULL;
 	IWICFormatConverter *WICConverter = NULL;
-	ID2D1Bitmap* bmp;
+	ID2D1Bitmap* bmp = NULL;
 	HRESULT hr;
 
 	hr = CoCreateInstance(CLSID_WICImagingFactory, NULL, CLSCTX_INPROC_SERVER, IID_IWICImagingFactory, (LPVOID*)&WICFactory);
@@ -132,16 +132,20 @@ void Graphics::DrawImage(LPWSTR fileName, float x, float y, float width, float h
 	if (WICConverter && !bmp)
 	{
 		renderTarget->CreateBitmapFromWicBitmap(WICConverter, NULL, &bmp);
-	}
-	//Draws an image and scales it to the current window size
-	if (bmp)
-	{
-		renderTarget->DrawBitmap(bmp, D2D1::Rect(x,y,x+width,y+height));
+		bitmap = bmp;
 	}
 	
 	WICFactory->Release();
 	WICDecoder->Release();
 	WICConverter->Release();
 	pFrame->Release();
+}
+
+void Graphics::DrawImage(float x, float y, float width, float height)
+{	
+	if (bitmap)
+	{
+		renderTarget->DrawBitmap(bitmap, D2D1::Rect(x, y, x + width, y + height));
+	}
 }
 

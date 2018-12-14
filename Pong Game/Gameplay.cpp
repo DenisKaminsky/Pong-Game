@@ -1,4 +1,5 @@
 #include "Gameplay.h"
+#include <string>
 
 #define TIMER_ID 666
 #define EXIT_COMMAND 9000
@@ -21,27 +22,26 @@ int rBoardHeight;
 //boards width
 int boardWidth;
 //border
-int borderHeight = 38;
+int BottomBorderHeight = 25;
+int TopBorderHeight = 48;
 
 int lPlayerPoints = 0;
 int rPlayerPoints = 0;
 int windowHeight = 0;
 int windowWidth = 0;
 
-LPWSTR IntToLPWSTR(int number)
-{
-	wchar_t buffer[5];
-	ZeroMemory(buffer, 5);
-	wsprintfW(buffer, L"%d", number);
-	return buffer;
-}
-
 void BallBounceFromBoundary()
 {
-	if (ballPosition.y + ballRadius >= windowHeight)
+	if (ballPosition.y + ballRadius >= windowHeight-BottomBorderHeight)
 		ballSpeed.y = -ballSpeed.y;
-	if (ballPosition.y - ballRadius <= 0)
+	if (ballPosition.y - ballRadius <= TopBorderHeight)
 		ballSpeed.y = -ballSpeed.y;
+}
+
+void CheckGameIsOver()
+{
+	if (lPlayerPoints == 6)
+		StopGame();
 }
 
 void BallOutOfField()
@@ -64,10 +64,10 @@ void BallOutOfField()
 
 void BoardLimit(POINT &boardPosition,int boardHeight)
 {
-	if (boardPosition.y <= 0)
-		boardPosition.y = 0;
-	if (boardPosition.y + boardHeight >= windowHeight)
-		boardPosition.y = windowHeight - boardHeight;
+	if (boardPosition.y <= TopBorderHeight)
+		boardPosition.y = TopBorderHeight;
+	if (boardPosition.y + boardHeight >= windowHeight-BottomBorderHeight)
+		boardPosition.y = windowHeight - boardHeight - BottomBorderHeight;
 }
 
 void RBoardMoveDown()
@@ -85,11 +85,13 @@ void RBoardMoveUp()
 void LBoardMoveDown()
 {
 	lBoardPosition.y += lBoardSpeed;
+	BoardLimit(lBoardPosition, lBoardHeight);
 }
 
 void LBoardMoveUp()
 {
 	lBoardPosition.y -= lBoardSpeed;
+	BoardLimit(lBoardPosition, lBoardHeight);
 }
 
 void SetGameParameters(int difficulty, int bRadius, int bWidth, int lbHeight, int rbHeight, int rbSpeed)
@@ -127,18 +129,17 @@ VOID CALLBACK TimerProc(HWND hWnd, UINT uMessage, UINT_PTR uEventId, DWORD dwTim
 {	
 	graphics->BeginDraw();
 	graphics->ClearScreen(0, 0, 0);
+	//draw background
+	graphics->DrawImage(0, 0, windowWidth, windowHeight);
 	//drawBall
 	graphics->DrawCircle(ballPosition.x, ballPosition.y, ballRadius, 0, 0, 1, 1);
 	//drawLBoard
 	graphics->DrawRoundRectangle(lBoardPosition.x, lBoardPosition.y, boardWidth, lBoardHeight, 255, 0, 0, 1);
 	//drawRBoard
 	graphics->DrawRoundRectangle(rBoardPosition.x, rBoardPosition.y, boardWidth, rBoardHeight, 255, 0, 0, 1);
-	//drawBorders
-	graphics->DrawRectangle(0,0, windowWidth, borderHeight, 255, 255, 155, 1);
-	graphics->DrawRectangle(0,windowHeight-borderHeight, windowWidth, borderHeight,255, 255, 155, 1);
-	graphics->DrawString(L"0", 1, windowWidth/2-25, 1, 20, 20,40, 255, 0, 0, 1);
+	graphics->DrawString(std::to_wstring(lPlayerPoints).c_str(), 1, windowWidth/2-25, 1, 20, 20,40, 255, 0, 0, 1);
     graphics->DrawString(L":", 1, windowWidth/2+2,1, 1, 20,40, 255, 0, 0, 1);
-	graphics->DrawString(L"0", 1, windowWidth/2+15, 1, 20, 20,40, 255, 0, 0, 1);
+	graphics->DrawString(std::to_wstring(rPlayerPoints).c_str(), 1, windowWidth/2+15, 1, 20, 20,40, 255, 0, 0, 1);
 	ballPosition.x += ballSpeed.x;
 	ballPosition.y += ballSpeed.y;
 	BallBounceFromBoundary();
@@ -150,24 +151,28 @@ VOID CALLBACK TimerProc(HWND hWnd, UINT uMessage, UINT_PTR uEventId, DWORD dwTim
 	graphics->EndDraw();
 }
 
-void StartGame(HWND hwnd,bool isWithBotMode,int difficulty)
+void InitializeGame(HWND hwnd)
 {
 	hWnd = hwnd;
 	graphics = new Graphics();
 	graphics->Init(hWnd);
+	graphics->LoadImageFromFile(L"..\\ResourceFiles\\font.jpg");
+}
+
+void DeleteGame()
+{
+	delete graphics;
+}
+
+void StartGame(HWND hwnd,bool isWithBotMode,int difficulty)
+{
 	SetGameParameters(difficulty,20,30,180,180,10);
 	SetTimer(hWnd, TIMER_ID, 20, TimerProc);
 }
 
-void DeleteGameParams()
-{
-	delete graphics;
-	KillTimer(hWnd, TIMER_ID);
-}
-
 void StopGame()
 {
-	DeleteGameParams();
+	KillTimer(hWnd, TIMER_ID);
 	SendMessage(hWnd, WM_COMMAND, EXIT_COMMAND, NULL);
 }
 

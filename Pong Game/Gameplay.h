@@ -4,7 +4,8 @@
 
 void StartGame(HWND hWnd, bool isWithBotMode, int difficulty);
 void StopGame();
-void DeleteGameParams();
+void DeleteGame();
+void InitializeGame(HWND hwnd);
 void RBoardMoveDown();
 void RBoardMoveUp();
 void LBoardMoveDown();
