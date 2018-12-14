@@ -1,19 +1,51 @@
 #include "MyDialogBox.h"
+#include "Tools.h"
+
+#define BUTTON_YES 8000
+#define BUTTON_NO 8001
+#define BUTTON_OK 8002
+#define BUTTON_CONTINUE 8003
 
 WNDCLASSEX wcex;
-HWND leftButton;
-HWND rightButton;
+HWND yesButton,noButton;
+HWND okButton,continueButton;
+HWND parent;
 
 int inclineButton;
-int wWidth = 400;
-int wHeight = 400;
+int wWidth = 500;
+int wHeight = 250;
 
 void CreateButtons(HWND hWnd, HINSTANCE hInstance, int buttonWidth, int buttonHeight, int Incline)
 {
 	inclineButton = Incline;
 
-	leftButton = CreateWindow("button", "Left", WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | BS_PUSHBUTTON | BS_OWNERDRAW, (wWidth / 2) - buttonWidth - 50 , wHeight / 2 + buttonHeight, buttonHeight, buttonHeight, hWnd, (HMENU)BUTTON_LEFT, hInstance, NULL);
-	rightButton = CreateWindow("button", "Right", WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | BS_PUSHBUTTON | BS_OWNERDRAW, wWidth / 2 + buttonWidth + 50, wHeight / 2 + buttonHeight, buttonWidth, buttonHeight, hWnd, (HMENU)BUTTON_RIGHT, hInstance, NULL);
+	yesButton = CreateWindow("button", "YES", WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | BS_PUSHBUTTON | BS_OWNERDRAW, 20, wHeight / 2 , buttonWidth, buttonHeight, hWnd, (HMENU)BUTTON_YES, hInstance, NULL);
+	noButton = CreateWindow("button", "NO", WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | BS_PUSHBUTTON | BS_OWNERDRAW, wWidth - buttonWidth - 20, wHeight / 2, buttonWidth, buttonHeight, hWnd, (HMENU)BUTTON_NO, hInstance, NULL);
+	//okButton = CreateWindow("button", "OK", WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | BS_PUSHBUTTON | BS_OWNERDRAW, wWidth/2 - buttonWidth/2, wHeight / 2, buttonWidth, buttonHeight, hWnd, (HMENU)BUTTON_OK, hInstance, NULL);
+	continueButton = CreateWindow("button", "CONTINUE", WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | BS_PUSHBUTTON | BS_OWNERDRAW, wWidth / 2 - (buttonWidth+15)/2, wHeight / 2, buttonWidth+15, buttonHeight, hWnd, (HMENU)BUTTON_CONTINUE, hInstance, NULL);
+}
+
+void ShowDialog(HWND hWndDialog,HWND hWndParent)
+{
+	parent = hWndParent;
+	EnableWindow(parent, FALSE);
+	ShowWindow(hWndDialog,SW_SHOW);
+}
+
+void ShowDialogExitProgram(HWND hWndDialog, HWND hWndParent)
+{
+	InvalidateRect(hWndDialog, NULL, TRUE);
+	SendMessage(hWndDialog, WM_SETTEXT, 0, (LPARAM)"EXIT");
+	ShowDialog(hWndDialog, hWndParent);
+	HFONT hFont = CreateFont(30, 15, 0, 0, FW_DONTCARE, FALSE, FALSE,
+		FALSE, DEFAULT_CHARSET, OUT_OUTLINE_PRECIS,
+		CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, VARIABLE_PITCH,
+		TEXT("SlantCYRILLIC"));
+	HDC hdc = GetDC(hWndDialog);
+
+	PrintTextToScreen(hdc, wWidth / 2 - 190, 50, "DO YOU REALLY WANT TO EXIT?", 27, RGB(255, 0, 0), hFont);
+	ReleaseDC(hWndDialog, hdc);
+	DeleteObject(hFont);
 }
 
 //message handler
@@ -31,11 +63,17 @@ LRESULT CALLBACK DialogProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPara
 	{
 		switch (wParam)
 		{
-		case BUTTON_LEFT:
-			//RedrawButton(buttonPlay, "PLAY", 4);
+		case BUTTON_YES:
+			RedrawButton(yesButton, "YES", 3,30);
 			break;
-		case BUTTON_RIGHT:
-			//RedrawButton(buttonHelp, "HELP", 4);
+		case BUTTON_NO:
+			RedrawButton(noButton, "NO", 2,30);
+			break;
+		case BUTTON_OK:
+			//RedrawButton(okButton, "OK", 2, 30);
+			break;
+		case BUTTON_CONTINUE:
+			RedrawButton(continueButton, "CONTINUE", 8, 30);
 			break;
 		}
 	}
@@ -44,18 +82,13 @@ LRESULT CALLBACK DialogProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPara
 	case WM_COMMAND:
 		switch (wParam)
 		{
-		case BUTTON_LEFT:
+		case BUTTON_YES:
+			SendMessage(parent, WM_DESTROY, NULL, NULL);
 			break;
-		case BUTTON_RIGHT:
-			break;
-		}
-		break;
-	//close window
-	case WM_CLOSE:
-		MB_RESULT = MessageBox(hWnd, "Do you really want to exittttt ?", "Exittt", MB_YESNO);
-		if (MB_RESULT == 6)
-		{
+		case BUTTON_NO:
+			EnableWindow(parent, TRUE);
 			ShowWindow(hWnd, SW_HIDE);
+			break;
 		}
 		break;
 	default:
@@ -64,6 +97,15 @@ LRESULT CALLBACK DialogProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPara
 	return 0;
 }
 
+void SetWindowSize(HWND hWnd)
+{
+	HDC hDCScreen = GetDC(NULL);
+	int HLen = GetDeviceCaps(hDCScreen, HORZRES);
+	int VLen = GetDeviceCaps(hDCScreen, VERTRES);
+	ReleaseDC(NULL, hDCScreen);
+	MoveWindow(hWnd, HLen/2-wWidth/2, VLen/2-wHeight/2, wWidth, wHeight, NULL);
+
+}
 HWND CreateDialogBox(HINSTANCE hInstance)
 {
 	HWND hWnd;
@@ -85,19 +127,19 @@ HWND CreateDialogBox(HINSTANCE hInstance)
 
 	//window creation
 	hWnd = CreateWindow("MyDialogBox", "Dialog",
-		WS_OVERLAPPED | WS_SYSMENU | WS_MINIMIZEBOX, CW_USEDEFAULT, 0,
+		WS_OVERLAPPED, CW_USEDEFAULT, 0,
 		CW_USEDEFAULT, 0, NULL, NULL, hInstance, NULL);
 
 	//font creation
-	/*HFONT hFont = CreateFont(60, 30, 0, 0, FW_DONTCARE, FALSE, FALSE,
+	HFONT hFont = CreateFont(60, 30, 0, 0, FW_DONTCARE, FALSE, FALSE,
 		FALSE, DEFAULT_CHARSET, OUT_OUTLINE_PRECIS,
 		CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, VARIABLE_PITCH,
-		TEXT("SlantCYRILLIC"));*/
+		TEXT("SlantCYRILLIC"));
 
-	//buttons creation
-	//InitializeButtons(hWnd, hInstance, 260, 80, 30);
 	//set window size
-    MoveWindow(hWnd, 150, 100, wWidth,wHeight, NULL);
+	SetWindowSize(hWnd);
+	//buttons creation
+	CreateButtons(hWnd, hInstance, 130, 80, 30);
 	//recieve message
 	return hWnd;
 }

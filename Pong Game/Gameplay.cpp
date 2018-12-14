@@ -129,8 +129,8 @@ void SetGameParameters(bool isWithBotMode,int difficulty, int bRadius, int bWidt
 	//easy
 	if (difficulty = 1)
 	{
-		ballSpeed.y = 10;
-		ballSpeed.x = 1;
+		ballSpeed.y = 20;
+		ballSpeed.x = 15;
 		lBoardSpeed = rbSpeed;
 	}
 }
@@ -188,6 +188,7 @@ void StartGame(HWND hwnd,bool isWithBotMode,int difficulty)
 void StopGame(LPCSTR message)
 {
 	KillTimer(hWnd, TIMER_ID);
+	graphics->ClearScreen(0, 0, 0);
 	SendMessage(hWnd, WM_COMMAND, EXIT_COMMAND, (LPARAM)message);
 }
 
