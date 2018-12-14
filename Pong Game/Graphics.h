@@ -2,11 +2,13 @@
 
 #include <Windows.h>
 #include <d2d1.h>
+#include <wincodec.h>
 
 class Graphics
 {
 	ID2D1Factory* factory;
 	ID2D1HwndRenderTarget* renderTarget;//where to draw
+	ID2D1Bitmap* bitmap;
 public:
 	Graphics();//constructor
 	~Graphics();//destructor
@@ -19,5 +21,7 @@ public:
 	void DrawCircle(float x, float y, float radius, float r, float g, float b,float a);
 	void DrawRoundRectangle(float x, float y, float width, float height, float r, float g, float b, float a);
 	void DrawRectangle(float x, float y, float width, float height, float r, float g, float b, float a);
-	void DrawString(LPCWSTR text,int length, float x, float y, float width, float height,float fontSize, float r, float g, float b, float a);
+	void DrawString(LPWSTR text,int length, float x, float y, float width, float height,float font, float r, float g, float b, float a);
+	void DrawImage(LPWSTR fileName, float x, float y, float width, float height);
+
 };

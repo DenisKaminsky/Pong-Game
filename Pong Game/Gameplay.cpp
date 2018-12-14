@@ -1,6 +1,4 @@
 #include "Gameplay.h"
-#include <string.h>
-#include <stdio.h>
 
 #define TIMER_ID 666
 #define EXIT_COMMAND 9000
@@ -30,6 +28,14 @@ int rPlayerPoints = 0;
 int windowHeight = 0;
 int windowWidth = 0;
 
+LPWSTR IntToLPWSTR(int number)
+{
+	wchar_t buffer[5];
+	ZeroMemory(buffer, 5);
+	wsprintfW(buffer, L"%d", number);
+	return buffer;
+}
+
 void BallBounceFromBoundary()
 {
 	if (ballPosition.y + ballRadius >= windowHeight)
@@ -40,10 +46,18 @@ void BallBounceFromBoundary()
 
 void BallOutOfField()
 {
-	if ((ballPosition.x + ballRadius >= windowWidth) || (ballPosition.x - ballRadius <= 0))
+	if (ballPosition.x + ballRadius >= windowWidth)
 	{		
 		ballPosition.x = windowWidth / 2;
 		ballPosition.y = windowHeight / 2;
+		lPlayerPoints++;
+		Sleep(1000);
+	}
+	if (ballPosition.x - ballRadius <= 0)
+	{
+		ballPosition.x = windowWidth / 2;
+		ballPosition.y = windowHeight / 2;
+		rPlayerPoints++;
 		Sleep(1000);
 	}
 }
@@ -122,13 +136,11 @@ VOID CALLBACK TimerProc(HWND hWnd, UINT uMessage, UINT_PTR uEventId, DWORD dwTim
 	//drawBorders
 	graphics->DrawRectangle(0,0, windowWidth, borderHeight, 255, 255, 155, 1);
 	graphics->DrawRectangle(0,windowHeight-borderHeight, windowWidth, borderHeight,255, 255, 155, 1);
-	graphics->DrawString(L"6", 1, windowWidth/2-25, 1, 20, 20,40, 255, 0, 0, 1);
-	graphics->DrawString(L":", 1, windowWidth/2+2,1, 1, 20,40, 255, 0, 0, 1);
-	graphics->DrawString(L"5", 1, windowWidth/2+15, 1, 20, 20,40, 255, 0, 0, 1);
-	
+	graphics->DrawString(L"0", 1, windowWidth/2-25, 1, 20, 20,40, 255, 0, 0, 1);
+    graphics->DrawString(L":", 1, windowWidth/2+2,1, 1, 20,40, 255, 0, 0, 1);
+	graphics->DrawString(L"0", 1, windowWidth/2+15, 1, 20, 20,40, 255, 0, 0, 1);
 	ballPosition.x += ballSpeed.x;
 	ballPosition.y += ballSpeed.y;
-
 	BallBounceFromBoundary();
 	//here boards and ball contact physics
 	BoardLimit(lBoardPosition, lBoardHeight);

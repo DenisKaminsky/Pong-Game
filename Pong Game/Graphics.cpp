@@ -2,16 +2,20 @@
 #include <dwrite.h>
 #pragma comment(lib,"dwrite.lib")
 
+using namespace std;
+
 Graphics::Graphics()
 {
 	factory = NULL;
 	renderTarget = NULL;
+	bitmap = NULL;
 }
 
 Graphics::~Graphics()
 {
 	if (factory) factory->Release();
 	if (renderTarget) renderTarget->Release();
+	if (bitmap) bitmap->Release();
 }
 
 //init factory and renderTarget
@@ -70,12 +74,12 @@ void Graphics::DrawRectangle(float x, float y, float width, float height, float 
 	//renderTarget->DrawTextA(text, length, ,D2D1::Rect(x, y, x + width, y + height), brush);
 }
 
-void Graphics::DrawString(LPCWSTR text,int length,float x,float y,float width,float height,float fontSize,float r, float g, float b, float a)
+void Graphics::DrawString(LPWSTR text,int length,float x,float y,float width,float height,float fontSize,float r, float g, float b, float a)
 {
 	ID2D1SolidColorBrush* brush;
 	IDWriteFactory* dwFactory;
-	IDWriteTextFormat* format;
-
+	IDWriteTextFormat* format;	
+	
 	DWriteCreateFactory(DWRITE_FACTORY_TYPE_SHARED, __uuidof(dwFactory), reinterpret_cast<IUnknown **>(&dwFactory));
 	dwFactory->CreateTextFormat(L"SlantCYRILLIC", nullptr, DWRITE_FONT_WEIGHT_REGULAR, DWRITE_FONT_STYLE_NORMAL, DWRITE_FONT_STRETCH_NORMAL, fontSize, L"en-us", &format);
 	format->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_LEADING);
@@ -85,5 +89,59 @@ void Graphics::DrawString(LPCWSTR text,int length,float x,float y,float width,fl
 	brush->Release();
 	format->Release();
 	dwFactory->Release();
+}
+
+void Graphics::DrawImage(LPWSTR fileName, float x, float y, float width, float height)
+{
+	IWICImagingFactory* WICFactory;
+	IWICBitmapDecoder *WICDecoder = NULL;
+	IWICBitmapFrameDecode *pFrame = NULL;
+	IWICFormatConverter *WICConverter = NULL;
+	ID2D1Bitmap* bmp;
+	HRESULT hr;
+
+	hr = CoCreateInstance(CLSID_WICImagingFactory, NULL, CLSCTX_INPROC_SERVER, IID_IWICImagingFactory, (LPVOID*)&WICFactory);
+	hr = WICFactory->CreateDecoderFromFilename(
+		fileName,                      // Image to be decoded
+		NULL,                            // Do not prefer a particular vendor
+		GENERIC_READ,                    // Desired read access to the file
+		WICDecodeMetadataCacheOnDemand,  // Cache metadata when needed
+		&WICDecoder                        // Pointer to the decoder
+	);
+	// Retrieve the first frame of the image from the decoder
+	if (SUCCEEDED(hr))
+	{
+		hr = WICDecoder->GetFrame(0, &pFrame);
+	}
+	// Format convert the frame to 32bppPBGRA
+	if (SUCCEEDED(hr))
+	{
+		hr = WICFactory->CreateFormatConverter(&WICConverter);
+	}
+	if (SUCCEEDED(hr))
+	{
+		hr = WICConverter->Initialize(
+			pFrame,                          // Input bitmap to convert
+			GUID_WICPixelFormat32bppPBGRA,   // Destination pixel format
+			WICBitmapDitherTypeNone,         // Specified dither pattern
+			NULL,                            // Specify a particular palette 
+			0.0f,                             // Alpha threshold
+			WICBitmapPaletteTypeCustom       // Palette translation type
+		);
+	}
+	if (WICConverter && !bmp)
+	{
+		renderTarget->CreateBitmapFromWicBitmap(WICConverter, NULL, &bmp);
+	}
+	//Draws an image and scales it to the current window size
+	if (bmp)
+	{
+		renderTarget->DrawBitmap(bmp, D2D1::Rect(x,y,x+width,y+height));
+	}
+	
+	WICFactory->Release();
+	WICDecoder->Release();
+	WICConverter->Release();
+	pFrame->Release();
 }
 
