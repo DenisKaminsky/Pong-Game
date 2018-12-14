@@ -3,7 +3,8 @@
 #include "Graphics.h"
 
 void StartGame(HWND hWnd, bool isWithBotMode, int difficulty);
-void StopGame();
+void StopGame(LPCSTR message);
+void Pause();
 void DeleteGame();
 void InitializeGame(HWND hwnd);
 void RBoardMoveDown();

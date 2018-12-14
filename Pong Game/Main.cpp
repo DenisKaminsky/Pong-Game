@@ -35,6 +35,7 @@ const int WindowHeight = 700;
 const int WindowWidth = 1200;
 int buttonIncline;
 bool inGame;
+bool isWithBot;
 
 void SetButtonFont(HWND hWnd,HFONT hFont)
 {
@@ -166,6 +167,7 @@ void ShowGameField(HWND hWnd,bool withBot,int difficulty)
 	ShowWindow(buttonRepeat, SW_HIDE);
 	ShowWindow(buttonMainMenu, SW_HIDE);
 	inGame = true;
+	isWithBot = withBot;
 	StartGame(hWnd,withBot, difficulty);
 }
 
@@ -307,10 +309,10 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			ShowGameField(hWnd, true, 1);
 			break;
 		case BUTTON_NORMAL_ID:
-			ShowGameField(hWnd, true, 2);
+			ShowGameField(hWnd, true, 1);
 			break;
 		case BUTTON_HARD_ID:
-			ShowGameField(hWnd, true, 3);
+			ShowGameField(hWnd, true, 1);
 			break;
 		case BUTTON_HELP_ID:
 			MessageBox(hWnd, "gg \nnoob", "HELP", MB_OK);			
@@ -325,7 +327,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			break;
 		case EXIT_GAME_COMMAND:
 			inGame = false;
-			ShowGameResult(hWnd, "PLAYER 1 WIN", 12);
+			ShowGameResult(hWnd, (LPCSTR)lParam, strlen((LPCSTR)lParam));
 			break;
 		}
 		break;
@@ -338,14 +340,14 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 				RBoardMoveUp();
 			if (wParam == 40)//right down
 				RBoardMoveDown();
-			if (wParam == 87)//left up
+			if (!isWithBot && wParam == 87)//left up
 				LBoardMoveUp();
-			if (wParam == 83)//left down
+			if (!isWithBot && wParam == 83)//left down
 				LBoardMoveDown();
 		}
-		if (wParam == 27) //если нажали ESC то выходим 
+		if (inGame && wParam == 27) //если нажали ESC то выходим 
 		{
-			StopGame();
+			Pause();
 		}
 		if (wParam == 8) //press BackSpace to Go Back
 		{

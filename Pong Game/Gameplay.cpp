@@ -3,6 +3,7 @@
 
 #define TIMER_ID 666
 #define EXIT_COMMAND 9000
+#define GO_TO_MAIN_MENU 10009
 
 Graphics* graphics;
 HWND hWnd;
@@ -29,6 +30,7 @@ int lPlayerPoints = 0;
 int rPlayerPoints = 0;
 int windowHeight = 0;
 int windowWidth = 0;
+bool withBot;
 
 void BallBounceFromBoundary()
 {
@@ -41,7 +43,12 @@ void BallBounceFromBoundary()
 void CheckGameIsOver()
 {
 	if (lPlayerPoints == 6)
-		StopGame();
+		if (withBot)
+			StopGame("YOU LOSE");
+		else
+			StopGame("PLAYER 1 WIN");
+	if (rPlayerPoints == 6)
+		StopGame("PLAYER 2 WIN");
 }
 
 void BallOutOfField()
@@ -52,6 +59,7 @@ void BallOutOfField()
 		ballPosition.y = windowHeight / 2;
 		lPlayerPoints++;
 		Sleep(1000);
+		CheckGameIsOver();
 	}
 	if (ballPosition.x - ballRadius <= 0)
 	{
@@ -59,6 +67,7 @@ void BallOutOfField()
 		ballPosition.y = windowHeight / 2;
 		rPlayerPoints++;
 		Sleep(1000);
+		CheckGameIsOver();
 	}
 }
 
@@ -94,10 +103,11 @@ void LBoardMoveUp()
 	BoardLimit(lBoardPosition, lBoardHeight);
 }
 
-void SetGameParameters(int difficulty, int bRadius, int bWidth, int lbHeight, int rbHeight, int rbSpeed)
+void SetGameParameters(bool isWithBotMode,int difficulty, int bRadius, int bWidth, int lbHeight, int rbHeight, int rbSpeed)
 {
 	RECT rect;
 
+	withBot = isWithBotMode;
 	lPlayerPoints = 0;
 	rPlayerPoints = 0;
 	GetClientRect(hWnd, &rect);
@@ -137,9 +147,9 @@ VOID CALLBACK TimerProc(HWND hWnd, UINT uMessage, UINT_PTR uEventId, DWORD dwTim
 	graphics->DrawRoundRectangle(lBoardPosition.x, lBoardPosition.y, boardWidth, lBoardHeight, 255, 0, 0, 1);
 	//drawRBoard
 	graphics->DrawRoundRectangle(rBoardPosition.x, rBoardPosition.y, boardWidth, rBoardHeight, 255, 0, 0, 1);
-	graphics->DrawString(std::to_wstring(lPlayerPoints).c_str(), 1, windowWidth/2-25, 1, 20, 20,40, 255, 0, 0, 1);
-    graphics->DrawString(L":", 1, windowWidth/2+2,1, 1, 20,40, 255, 0, 0, 1);
-	graphics->DrawString(std::to_wstring(rPlayerPoints).c_str(), 1, windowWidth/2+15, 1, 20, 20,40, 255, 0, 0, 1);
+	graphics->DrawString(std::to_wstring(lPlayerPoints).c_str(), 1, (float)(windowWidth/2-25), 1, 20, 20,40, 255, 0, 0, 1);
+    graphics->DrawString(L":", 1, (float)(windowWidth/2+2),1, 1, 20,40, 255, 0, 0, 1);
+	graphics->DrawString(std::to_wstring(rPlayerPoints).c_str(), 1, (float)(windowWidth/2+15), 1, 20, 20,40, 255, 0, 0, 1);
 	ballPosition.x += ballSpeed.x;
 	ballPosition.y += ballSpeed.y;
 	BallBounceFromBoundary();
@@ -166,17 +176,22 @@ void DeleteGame()
 
 void StartGame(HWND hwnd,bool isWithBotMode,int difficulty)
 {
-	SetGameParameters(difficulty,20,30,180,180,10);
+	SetGameParameters(isWithBotMode,difficulty,20,30,180,180,10);
 	SetTimer(hWnd, TIMER_ID, 20, TimerProc);
 }
 
-void StopGame()
+void StopGame(LPCSTR message)
 {
 	KillTimer(hWnd, TIMER_ID);
-	SendMessage(hWnd, WM_COMMAND, EXIT_COMMAND, NULL);
+	SendMessage(hWnd, WM_COMMAND, EXIT_COMMAND, (LPARAM)message);
 }
 
 void Pause()
 {
-
+	KillTimer(hWnd, TIMER_ID);
+	int MB_RESULT = MessageBox(hWnd, "Do you really want to exit ?", "PAUSE", MB_YESNO);
+	if (MB_RESULT == 6)
+		SendMessage(hWnd, WM_COMMAND, GO_TO_MAIN_MENU, NULL);
+	else
+		SetTimer(hWnd, TIMER_ID, 20, TimerProc);
 }
