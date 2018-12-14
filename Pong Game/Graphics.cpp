@@ -8,14 +8,18 @@ Graphics::Graphics()
 {
 	factory = NULL;
 	renderTarget = NULL;
-	bitmap = NULL;
+	bitmapBackground = NULL;
+	bitmapLBoard = NULL;
+	bitmapLBoard = NULL;
 }
 
 Graphics::~Graphics()
 {
 	if (factory) factory->Release();
 	if (renderTarget) renderTarget->Release();
-	if (bitmap) bitmap->Release();
+	if (bitmapBackground) bitmapBackground->Release();
+	if (bitmapLBoard) bitmapLBoard->Release();
+	if (bitmapRBoard) bitmapRBoard->Release();
 }
 
 //init factory and renderTarget
@@ -39,6 +43,36 @@ bool Graphics::Init(HWND windowHandle)
 	if (res != S_OK)
 		return false;
 	return true;
+}
+
+void Graphics::SetBitmapBackground(ID2D1Bitmap* bitmap)
+{
+	bitmapBackground = bitmap;
+}
+
+void Graphics::SetBitmapLBoard(ID2D1Bitmap* bitmap)
+{
+	bitmapLBoard = bitmap;
+}
+
+void Graphics::SetBitmapRBoard(ID2D1Bitmap* bitmap)
+{
+	bitmapRBoard = bitmap;
+}
+
+ID2D1Bitmap* Graphics::GetBitmapBackground()
+{
+	return bitmapBackground;
+}
+
+ID2D1Bitmap* Graphics::GetBitmapLBoard()
+{
+	return bitmapLBoard;
+}
+
+ID2D1Bitmap* Graphics::GetBitmapRBoard()
+{
+	return bitmapRBoard;
 }
 
 //redraw region
@@ -91,7 +125,7 @@ void Graphics::DrawString(const wchar_t* text,int length,float x,float y,float w
 	dwFactory->Release();
 }
 
-void Graphics::LoadImageFromFile(LPWSTR fileName)
+ID2D1Bitmap* Graphics::LoadImageFromFile(LPWSTR fileName)//bitmap is ID2D1Bitmap where we save our picture
 {
 	IWICImagingFactory* WICFactory;
 	IWICBitmapDecoder *WICDecoder = NULL;
@@ -132,16 +166,17 @@ void Graphics::LoadImageFromFile(LPWSTR fileName)
 	if (WICConverter && !bmp)
 	{
 		renderTarget->CreateBitmapFromWicBitmap(WICConverter, NULL, &bmp);
-		bitmap = bmp;
 	}
 	
 	WICFactory->Release();
 	WICDecoder->Release();
 	WICConverter->Release();
 	pFrame->Release();
+	//bmp = NULL;
+	return bmp;
 }
 
-void Graphics::DrawImage(float x, float y, float width, float height)
+void Graphics::DrawImage(ID2D1Bitmap* bitmap, float x, float y, float width, float height)
 {	
 	if (bitmap)
 	{

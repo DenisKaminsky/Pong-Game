@@ -140,13 +140,16 @@ VOID CALLBACK TimerProc(HWND hWnd, UINT uMessage, UINT_PTR uEventId, DWORD dwTim
 	graphics->BeginDraw();
 	graphics->ClearScreen(0, 0, 0);
 	//draw background
-	graphics->DrawImage(0, 0, windowWidth, windowHeight);
+	graphics->DrawImage(graphics->GetBitmapBackground(), 0, 0, windowWidth, windowHeight);
 	//drawBall
 	graphics->DrawCircle(ballPosition.x, ballPosition.y, ballRadius, 0, 0, 1, 1);
 	//drawLBoard
-	graphics->DrawRoundRectangle(lBoardPosition.x, lBoardPosition.y, boardWidth, lBoardHeight, 255, 0, 0, 1);
+	graphics->DrawImage(graphics->GetBitmapLBoard(),lBoardPosition.x, lBoardPosition.y, boardWidth, lBoardHeight);
+	//graphics->DrawRoundRectangle(lBoardPosition.x, lBoardPosition.y, boardWidth, lBoardHeight, 255, 0, 0, 1);
 	//drawRBoard
-	graphics->DrawRoundRectangle(rBoardPosition.x, rBoardPosition.y, boardWidth, rBoardHeight, 255, 0, 0, 1);
+	graphics->DrawImage(graphics->GetBitmapRBoard(), rBoardPosition.x, rBoardPosition.y, boardWidth, rBoardHeight);
+	//graphics->DrawRoundRectangle(rBoardPosition.x, rBoardPosition.y, boardWidth, rBoardHeight, 255, 0, 0, 1);
+	//draw score
 	graphics->DrawString(std::to_wstring(lPlayerPoints).c_str(), 1, (float)(windowWidth/2-25), 1, 20, 20,40, 255, 0, 0, 1);
     graphics->DrawString(L":", 1, (float)(windowWidth/2+2),1, 1, 20,40, 255, 0, 0, 1);
 	graphics->DrawString(std::to_wstring(rPlayerPoints).c_str(), 1, (float)(windowWidth/2+15), 1, 20, 20,40, 255, 0, 0, 1);
@@ -166,7 +169,9 @@ void InitializeGame(HWND hwnd)
 	hWnd = hwnd;
 	graphics = new Graphics();
 	graphics->Init(hWnd);
-	graphics->LoadImageFromFile(L"..\\ResourceFiles\\font.jpg");
+	graphics->SetBitmapBackground(graphics->LoadImageFromFile(L"..\\ResourceFiles\\font.jpg"));
+	graphics->SetBitmapLBoard(graphics->LoadImageFromFile(L"..\\ResourceFiles\\LBoard2.png"));
+	graphics->SetBitmapRBoard(graphics->LoadImageFromFile(L"..\\ResourceFiles\\RBoard2.png"));
 }
 
 void DeleteGame()
