@@ -116,10 +116,12 @@
     <ClCompile Include="Gameplay.cpp" />
     <ClCompile Include="Graphics.cpp" />
     <ClCompile Include="Main.cpp" />
+    <ClCompile Include="MyDialogBox.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Gameplay.h" />
     <ClInclude Include="Graphics.h" />
+    <ClInclude Include="MyDialogBox.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

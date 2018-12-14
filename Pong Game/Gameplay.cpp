@@ -106,7 +106,7 @@ void LBoardMoveUp()
 void SetGameParameters(bool isWithBotMode,int difficulty, int bRadius, int bWidth, int lbHeight, int rbHeight, int rbSpeed)
 {
 	RECT rect;
-
+	
 	withBot = isWithBotMode;
 	lPlayerPoints = 0;
 	rPlayerPoints = 0;

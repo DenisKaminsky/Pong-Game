@@ -1,5 +1,6 @@
 #define _USE_MATH_DEFINES
 #include "Gameplay.h"
+#include "MyDialogBox.h"
 #include <gdiplus.h>
 #pragma comment(lib,"gdiplus.lib")
 
@@ -26,6 +27,7 @@ HWND buttonEasy, buttonNormal, buttonHard;//choose difficulty
 HWND buttonRepeat, buttonMainMenu; //game result;
 HFONT hFont;
 HBITMAP hBitmap;
+HWND hwnd2;
 
 int currentMenuId;
 
@@ -315,7 +317,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			ShowGameField(hWnd, true, 1);
 			break;
 		case BUTTON_HELP_ID:
-			MessageBox(hWnd, "gg \nnoob", "HELP", MB_OK);			
+			ShowWindow(hwnd2, SW_SHOW);
+			//MessageBox(hWnd, "gg \nnoob", "HELP", MB_OK);			
 			break;
 		case BUTTON_EXIT_ID:
 			SendMessage(hWnd, WM_CLOSE, wParam, lParam);
@@ -412,7 +415,8 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdL
 	hWnd = CreateWindow("PongGame", "The Game Pong",
 		WS_OVERLAPPED | WS_SYSMENU | WS_MINIMIZEBOX, CW_USEDEFAULT, 0,
 		CW_USEDEFAULT, 0, NULL, NULL, hInstance, NULL);
-	
+
+	hwnd2 = CreateDialogBox(hInstance);
 	//font creation
 	hFont = CreateFont(60, 30, 0, 0, FW_DONTCARE, FALSE, FALSE,
 		FALSE, DEFAULT_CHARSET, OUT_OUTLINE_PRECIS,
