@@ -1,6 +1,7 @@
 #define _USE_MATH_DEFINES
 #include "Gameplay.h"
 #include "MyDialogBox.h"
+#include <Windows.h>
 #include <gdiplus.h>
 #pragma comment(lib,"gdiplus.lib")
 
@@ -217,7 +218,7 @@ void InitializeButtons(HWND hWnd, HINSTANCE hInstance, int buttonWidth, int butt
 	buttonMainMenu = CreateWindow("button", "MAIN MENU", WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | BS_PUSHBUTTON | BS_OWNERDRAW, WindowWidth / 2 - buttonWidth / 2, WindowHeight / 2 + buttonHeight/2 + 20, buttonWidth, buttonHeight, hWnd, (HMENU)BUTTON_MAIN_MENU_ID, hInstance, NULL);
 }
 
-void RedrawButton(HWND button,LPCSTR text,int textLength)
+void RedrawButton(HWND button,LPCSTR text,int textLength,int buttonIncline)
 {
 	RECT rect,rectForText;
 	HRGN region;
@@ -262,34 +263,34 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		switch (wParam)
 		{
 		case BUTTON_PLAY_ID:
-			RedrawButton(buttonPlay, "PLAY", 4);
+			RedrawButton(buttonPlay, "PLAY", 4, buttonIncline);
 			break;
 		case BUTTON_HELP_ID:
-			RedrawButton(buttonHelp, "HELP", 4);
+			RedrawButton(buttonHelp, "HELP", 4, buttonIncline);
 			break;
 		case BUTTON_EXIT_ID:
-			RedrawButton(buttonExit, "EXIT", 4);
+			RedrawButton(buttonExit, "EXIT", 4, buttonIncline);
 			break;
 		case BUTTON_ONE_PLAYER_ID:
-			RedrawButton(buttonOnePlayer, "ONE PLAYER", 10);
+			RedrawButton(buttonOnePlayer, "ONE PLAYER", 10, buttonIncline);
 			break;
 		case BUTTON_TWO_PLAYER_ID:
-			RedrawButton(buttonTwoPlayer, "TWO PLAYERS", 11);
+			RedrawButton(buttonTwoPlayer, "TWO PLAYERS", 11, buttonIncline);
 			break;
 		case BUTTON_EASY_ID:
-			RedrawButton(buttonEasy, "EASY", 4);
+			RedrawButton(buttonEasy, "EASY", 4, buttonIncline);
 			break;
 		case BUTTON_NORMAL_ID:
-			RedrawButton(buttonNormal, "NORMAL", 6);
+			RedrawButton(buttonNormal, "NORMAL", 6, buttonIncline);
 			break;
 		case BUTTON_HARD_ID:
-			RedrawButton(buttonHard, "HARD", 4);
+			RedrawButton(buttonHard, "HARD", 4, buttonIncline);
 			break;
 		case BUTTON_REPEAT_ID:
-			RedrawButton(buttonRepeat, "REPEAT", 6);
+			RedrawButton(buttonRepeat, "REPEAT", 6, buttonIncline);
 			break;
 		case BUTTON_MAIN_MENU_ID:
-			RedrawButton(buttonMainMenu, "MAIN MENU", 9);
+			RedrawButton(buttonMainMenu, "MAIN MENU", 9, buttonIncline);
 			break;
 		}	
 	}

@@ -1,9 +1,20 @@
 #include "MyDialogBox.h"
 
-#define BUTTON_LEFT 8000
-#define BUTTON_RIGHT 8001
-
 WNDCLASSEX wcex;
+HWND leftButton;
+HWND rightButton;
+
+int inclineButton;
+int wWidth = 400;
+int wHeight = 400;
+
+void CreateButtons(HWND hWnd, HINSTANCE hInstance, int buttonWidth, int buttonHeight, int Incline)
+{
+	inclineButton = Incline;
+
+	leftButton = CreateWindow("button", "Left", WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | BS_PUSHBUTTON | BS_OWNERDRAW, (wWidth / 2) - buttonWidth - 50 , wHeight / 2 + buttonHeight, buttonHeight, buttonHeight, hWnd, (HMENU)BUTTON_LEFT, hInstance, NULL);
+	rightButton = CreateWindow("button", "Right", WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | BS_PUSHBUTTON | BS_OWNERDRAW, wWidth / 2 + buttonWidth + 50, wHeight / 2 + buttonHeight, buttonWidth, buttonHeight, hWnd, (HMENU)BUTTON_RIGHT, hInstance, NULL);
+}
 
 //message handler
 LRESULT CALLBACK DialogProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
@@ -86,7 +97,7 @@ HWND CreateDialogBox(HINSTANCE hInstance)
 	//buttons creation
 	//InitializeButtons(hWnd, hInstance, 260, 80, 30);
 	//set window size
-	MoveWindow(hWnd, 150, 100, 300, 300, NULL);
+    MoveWindow(hWnd, 150, 100, wWidth,wHeight, NULL);
 	//recieve message
 	return hWnd;
 }
