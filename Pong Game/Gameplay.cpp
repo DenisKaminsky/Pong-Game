@@ -144,15 +144,16 @@ VOID CALLBACK TimerProc(HWND hWnd, UINT uMessage, UINT_PTR uEventId, DWORD dwTim
 	//drawBall
 	graphics->DrawCircle(ballPosition.x, ballPosition.y, ballRadius, 255, 0, 0, 1);
 	//drawLBoard
-	graphics->DrawImage(graphics->GetBitmapLBoard(),lBoardPosition.x, lBoardPosition.y, boardWidth, lBoardHeight);
+	graphics->DrawImage(graphics->GetBitmapLBoard(), lBoardPosition.x, lBoardPosition.y, boardWidth, lBoardHeight);
 	//graphics->DrawRoundRectangle(lBoardPosition.x, lBoardPosition.y, boardWidth, lBoardHeight, 255, 0, 0, 1);
 	//drawRBoard
 	graphics->DrawImage(graphics->GetBitmapRBoard(), rBoardPosition.x, rBoardPosition.y, boardWidth, rBoardHeight);
 	//graphics->DrawRoundRectangle(rBoardPosition.x, rBoardPosition.y, boardWidth, rBoardHeight, 255, 0, 0, 1);
 	//draw score
-	graphics->DrawString(std::to_wstring(lPlayerPoints).c_str(), 1, (float)(windowWidth/2-30), 1, 20, 20,40, 255, 0, 0, 1);
-    graphics->DrawString(L":", 1, (float)(windowWidth/2+2),1, 1, 20,40, 255, 0, 0, 1);
-	graphics->DrawString(std::to_wstring(rPlayerPoints).c_str(), 1, (float)(windowWidth/2+20), 1, 20, 20,40, 255, 0, 0, 1);
+	graphics->DrawString(std::to_wstring(lPlayerPoints).c_str(), 1, (float)(windowWidth / 2 - 30), 1, 20, 20, 40, 255, 0, 0, 1);
+	graphics->DrawString(L":", 1, (float)(windowWidth / 2 + 2), 1, 1, 20, 40, 255, 0, 0, 1);
+	graphics->DrawString(std::to_wstring(rPlayerPoints).c_str(), 1, (float)(windowWidth / 2 + 20), 1, 20, 20, 40, 255, 0, 0, 1);
+	graphics->EndDraw();
 	ballPosition.x += ballSpeed.x;
 	ballPosition.y += ballSpeed.y;
 	BallBounceFromBoundary();
@@ -160,8 +161,6 @@ VOID CALLBACK TimerProc(HWND hWnd, UINT uMessage, UINT_PTR uEventId, DWORD dwTim
 	BoardLimit(lBoardPosition, lBoardHeight);
 	//BoardLimit(rBoardPosition, rBoardHeight);
 	BallOutOfField();
-
-	graphics->EndDraw();
 }
 
 void InitializeGame(HWND hwnd)
@@ -174,8 +173,14 @@ void InitializeGame(HWND hwnd)
 	graphics->SetBitmapRBoard(graphics->LoadImageFromFile(L"..\\ResourceFiles\\RBoard2.png"));
 }
 
+void StopTimer()
+{
+	KillTimer(hWnd, TIMER_ID);
+}
+
 void DeleteGame()
 {
+	StopTimer();
 	delete graphics;
 }
 
@@ -185,16 +190,35 @@ void StartGame(HWND hwnd,bool isWithBotMode,int difficulty)
 	SetTimer(hWnd, TIMER_ID, 20, TimerProc);
 }
 
+//finish game and show result
 void StopGame(LPCSTR message)
 {
-	KillTimer(hWnd, TIMER_ID);
+	StopTimer();
+	graphics->BeginDraw();
 	graphics->ClearScreen(0, 0, 0);
+	graphics->EndDraw();
 	SendMessage(hWnd, WM_COMMAND, EXIT_COMMAND, (LPARAM)message);
 }
 
+//continue game
+void Continue()
+{
+	SetTimer(hWnd, TIMER_ID, 20, TimerProc);
+}
+
+//pause game
 void Pause()
 {
-	KillTimer(hWnd, TIMER_ID);
+	StopTimer();
+	graphics->BeginDraw();
+	graphics->DrawString(L"PAUSE", 5, (float)(windowWidth / 2 - 80), windowHeight/2, 170, 60, 60, 255, 0, 0, 1);
+	graphics->EndDraw();
+}
+
+//close game
+void ExitGame()
+{
+	StopTimer();
 	int MB_RESULT = MessageBox(hWnd, "Do you really want to exit ?", "PAUSE", MB_YESNO);
 	if (MB_RESULT == 6)
 		SendMessage(hWnd, WM_COMMAND, GO_TO_MAIN_MENU, NULL);

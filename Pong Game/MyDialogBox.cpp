@@ -1,4 +1,4 @@
-#include "MyDialogBox.h"
+﻿#include "MyDialogBox.h"
 #include "Tools.h"
 
 #define BUTTON_YES 8000
@@ -21,7 +21,7 @@ void CreateButtons(HWND hWnd, HINSTANCE hInstance, int buttonWidth, int buttonHe
 
 	yesButton = CreateWindow("button", "YES", WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | BS_PUSHBUTTON | BS_OWNERDRAW, 20, wHeight / 2 , buttonWidth, buttonHeight, hWnd, (HMENU)BUTTON_YES, hInstance, NULL);
 	noButton = CreateWindow("button", "NO", WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | BS_PUSHBUTTON | BS_OWNERDRAW, wWidth - buttonWidth - 20, wHeight / 2, buttonWidth, buttonHeight, hWnd, (HMENU)BUTTON_NO, hInstance, NULL);
-	//okButton = CreateWindow("button", "OK", WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | BS_PUSHBUTTON | BS_OWNERDRAW, wWidth/2 - buttonWidth/2, wHeight / 2, buttonWidth, buttonHeight, hWnd, (HMENU)BUTTON_OK, hInstance, NULL);
+	okButton = CreateWindow("button", "OK", WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | BS_PUSHBUTTON | BS_OWNERDRAW, wWidth/2 - buttonWidth/2, wHeight / 2, buttonWidth, buttonHeight, hWnd, (HMENU)BUTTON_OK, hInstance, NULL);
 	continueButton = CreateWindow("button", "CONTINUE", WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | BS_PUSHBUTTON | BS_OWNERDRAW, wWidth / 2 - (buttonWidth+15)/2, wHeight / 2, buttonWidth+15, buttonHeight, hWnd, (HMENU)BUTTON_CONTINUE, hInstance, NULL);
 }
 
@@ -32,10 +32,56 @@ void ShowDialog(HWND hWndDialog,HWND hWndParent)
 	ShowWindow(hWndDialog,SW_SHOW);
 }
 
+void ShowPauseDialog(HWND hWndDialog, HWND hWndParent)
+{
+	InvalidateRect(hWndDialog, NULL, TRUE);
+	SendMessage(hWndDialog, WM_SETTEXT, 0, (LPARAM)"PAUSE");
+	ShowWindow(yesButton, SW_HIDE);
+	ShowWindow(noButton, SW_HIDE);
+	ShowWindow(okButton, SW_HIDE);
+	ShowWindow(continueButton, SW_SHOW);
+	ShowDialog(hWndDialog, hWndParent);
+	HFONT hFont = CreateFont(60, 30, 0, 0, FW_DONTCARE, FALSE, FALSE,
+		FALSE, DEFAULT_CHARSET, OUT_OUTLINE_PRECIS,
+		CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, VARIABLE_PITCH,
+		TEXT("SlantCYRILLIC"));
+	HDC hdc = GetDC(hWndDialog);
+
+	PrintTextToScreen(hdc, wWidth / 2 - 80, 10, "PAUSE", 5, RGB(253, 196, 18), hFont);
+	ReleaseDC(hWndDialog, hdc);
+	DeleteObject(hFont);
+}
+
+void ShowHelpDialog(HWND hWndDialog, HWND hWndParent)
+{
+	InvalidateRect(hWndDialog, NULL, TRUE);
+	SendMessage(hWndDialog, WM_SETTEXT, 0, (LPARAM)"HELP");
+	ShowWindow(yesButton, SW_HIDE);
+	ShowWindow(noButton, SW_HIDE);
+	ShowWindow(okButton, SW_SHOW);
+	ShowWindow(continueButton, SW_HIDE);
+	ShowDialog(hWndDialog, hWndParent);
+	HFONT hFont = CreateFont(30, 15, 0, 0, FW_DONTCARE, FALSE, FALSE,
+		FALSE, DEFAULT_CHARSET, OUT_OUTLINE_PRECIS,
+		CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, VARIABLE_PITCH,
+		TEXT("SlantCYRILLIC"));
+	HDC hdc = GetDC(hWndDialog);
+
+	PrintTextToScreen(hdc, wWidth / 2 - 200, 10, "LEFT PLAYER CONTROLS BY W/S", 27, RGB(0, 255, 0), hFont);
+	PrintTextToScreen(hdc, wWidth / 2 - 230, 40, "RIGHT PLAYER CONTROLS BY ARROWS", 31, RGB(0, 255, 0), hFont);
+	PrintTextToScreen(hdc, wWidth / 2 - 235, 70, "WINNER IS THE PLAYER WITH 6 POINTS", 34, RGB(0, 255, 0), hFont);
+	ReleaseDC(hWndDialog, hdc);
+	DeleteObject(hFont);
+}
+
 void ShowDialogExitProgram(HWND hWndDialog, HWND hWndParent)
 {
 	InvalidateRect(hWndDialog, NULL, TRUE);
 	SendMessage(hWndDialog, WM_SETTEXT, 0, (LPARAM)"EXIT");
+	ShowWindow(yesButton, SW_SHOW);
+	ShowWindow(noButton, SW_SHOW);
+	ShowWindow(okButton, SW_HIDE);
+	ShowWindow(continueButton, SW_HIDE);
 	ShowDialog(hWndDialog, hWndParent);
 	HFONT hFont = CreateFont(30, 15, 0, 0, FW_DONTCARE, FALSE, FALSE,
 		FALSE, DEFAULT_CHARSET, OUT_OUTLINE_PRECIS,
@@ -70,7 +116,7 @@ LRESULT CALLBACK DialogProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPara
 			RedrawButton(noButton, "NO", 2,30);
 			break;
 		case BUTTON_OK:
-			//RedrawButton(okButton, "OK", 2, 30);
+			RedrawButton(okButton, "OK", 2, 30);
 			break;
 		case BUTTON_CONTINUE:
 			RedrawButton(continueButton, "CONTINUE", 8, 30);
@@ -85,6 +131,8 @@ LRESULT CALLBACK DialogProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPara
 		case BUTTON_YES:
 			SendMessage(parent, WM_DESTROY, NULL, NULL);
 			break;
+		case BUTTON_CONTINUE:
+		case BUTTON_OK:
 		case BUTTON_NO:
 			EnableWindow(parent, TRUE);
 			ShowWindow(hWnd, SW_HIDE);
