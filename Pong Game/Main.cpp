@@ -263,14 +263,36 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	{
 		if (inGame && !isPause)
 		{
-			if (wParam == 38)//right up
+			if ((GetAsyncKeyState(38) && GetAsyncKeyState(87)))//W + UP
+			{
 				RBoardMoveUp();
-			if (wParam == 40)//right down
-				RBoardMoveDown();
-			if (!isWithBot && wParam == 87)//left up
 				LBoardMoveUp();
-			if (!isWithBot && wParam == 83)//left down
+			}
+			else if ((GetAsyncKeyState(40) && GetAsyncKeyState(87)))//W + DOWN
+			{
+				RBoardMoveDown();
+				LBoardMoveUp();
+			}
+			else if ((GetAsyncKeyState(38) && GetAsyncKeyState(83)))//S + UP
+			{
+				RBoardMoveUp();
 				LBoardMoveDown();
+			}
+			else if ((GetAsyncKeyState(40) && GetAsyncKeyState(83)))//S + DOWN
+			{
+				RBoardMoveDown();
+				LBoardMoveDown();
+			}
+			else {
+				if (wParam == 38)//right up
+					RBoardMoveUp();
+				if (wParam == 40)//right down
+					RBoardMoveDown();
+				if (!isWithBot && wParam == 87)//left up
+					LBoardMoveUp();
+				if (!isWithBot && wParam == 83)//left down
+					LBoardMoveDown();
+			}
 		}
 		if (inGame && wParam == 80) //press P to pause 
 		{

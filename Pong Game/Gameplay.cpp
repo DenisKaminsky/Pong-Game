@@ -131,8 +131,8 @@ void SetGameParameters(bool isWithBotMode,int difficulty, int bRadius, int bWidt
 	//easy
 	if (difficulty = 1)
 	{
-		ballSpeed.y = 20;
-		ballSpeed.x = 15;
+		ballSpeed.y = 5;
+		ballSpeed.x = 1;
 		lBoardSpeed = rbSpeed;
 	}
 }
