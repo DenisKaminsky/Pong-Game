@@ -45,9 +45,9 @@ void ShowHelpDialog(HWND hWndDialog, HWND hWndParent)
 		TEXT("SlantCYRILLIC"));
 	HDC hdc = GetDC(hWndDialog);
 
-	PrintTextToScreen(hdc, wWidth / 2 - 200, 10, "LEFT PLAYER CONTROLS BY W/S", 27, RGB(0, 255, 0), hFont);
-	PrintTextToScreen(hdc, wWidth / 2 - 230, 40, "RIGHT PLAYER CONTROLS BY ARROWS", 31, RGB(0, 255, 0), hFont);
-	PrintTextToScreen(hdc, wWidth / 2 - 235, 70, "WINNER IS THE PLAYER WITH 6 POINTS", 34, RGB(0, 255, 0), hFont);
+	PrintTextToScreen(hdc, wWidth / 2 - 200, 10, "LEFT PLAYER CONTROLS BY W/S", 27, RGB(255, 128, 64), hFont);
+	PrintTextToScreen(hdc, wWidth / 2 - 230, 40, "RIGHT PLAYER CONTROLS BY ARROWS", 31, RGB(255, 128, 64), hFont);
+	PrintTextToScreen(hdc, wWidth / 2 - 235, 70, "WINNER IS THE PLAYER WITH 6 POINTS", 34, RGB(255, 128, 64), hFont);
 	ReleaseDC(hWndDialog, hdc);
 	DeleteObject(hFont);
 }
@@ -141,7 +141,7 @@ HWND CreateDialogBox(HINSTANCE hInstance)
 	wcex.hInstance = hInstance;
 	wcex.hIcon = LoadIcon(NULL, IDI_APPLICATION);
 	wcex.hCursor = LoadCursor(NULL, IDC_CROSS);//IDC_ARROW
-	wcex.hbrBackground = (HBRUSH)(COLOR_WINDOWTEXT + 1);
+	wcex.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
 	wcex.lpszMenuName = NULL;
 	wcex.lpszClassName = "MyDialogBox";
 	wcex.hIconSm = wcex.hIcon;
