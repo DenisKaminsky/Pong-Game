@@ -3,7 +3,6 @@
 
 #define TIMER_ID 666
 #define EXIT_COMMAND 9000
-#define GO_TO_MAIN_MENU 10009
 
 Graphics* graphics;
 HWND hWnd;
@@ -48,7 +47,10 @@ void CheckGameIsOver()
 		else
 			StopGame("PLAYER 1 WIN");
 	if (rPlayerPoints == 6)
-		StopGame("PLAYER 2 WIN");
+		if (withBot)
+			StopGame("YOU WIN");
+		else
+			StopGame("PLAYER 2 WIN");
 }
 
 void BallOutOfField()
@@ -213,15 +215,4 @@ void Pause()
 	graphics->BeginDraw();
 	graphics->DrawString(L"PAUSE", 5, (float)(windowWidth / 2 - 80), windowHeight/2, 170, 60, 60, 255, 0, 0, 1);
 	graphics->EndDraw();
-}
-
-//close game
-void ExitGame()
-{
-	StopTimer();
-	int MB_RESULT = MessageBox(hWnd, "Do you really want to exit ?", "PAUSE", MB_YESNO);
-	if (MB_RESULT == 6)
-		SendMessage(hWnd, WM_COMMAND, GO_TO_MAIN_MENU, NULL);
-	else
-		SetTimer(hWnd, TIMER_ID, 20, TimerProc);
 }

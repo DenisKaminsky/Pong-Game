@@ -5,6 +5,7 @@
 #define BUTTON_NO 8001
 #define BUTTON_OK 8002
 #define CONTINUE 5000
+#define GO_TO_MENU 10009
 
 WNDCLASSEX wcex;
 HWND yesButton,noButton;
@@ -14,6 +15,7 @@ HWND parent;
 int inclineButton;
 int wWidth = 500;
 int wHeight = 250;
+bool isExit;
 
 void CreateButtons(HWND hWnd, HINSTANCE hInstance, int buttonWidth, int buttonHeight, int Incline)
 {
@@ -52,8 +54,9 @@ void ShowHelpDialog(HWND hWndDialog, HWND hWndParent)
 	DeleteObject(hFont);
 }
 
-void ShowDialogExitProgram(HWND hWndDialog, HWND hWndParent)
+void ShowExitDialog(HWND hWndDialog, HWND hWndParent, bool isExitProgram)
 {
+	isExit = isExitProgram;
 	InvalidateRect(hWndDialog, NULL, TRUE);
 	SendMessage(hWndDialog, WM_SETTEXT, 0, (LPARAM)"EXIT");
 	ShowWindow(yesButton, SW_SHOW);
@@ -65,8 +68,10 @@ void ShowDialogExitProgram(HWND hWndDialog, HWND hWndParent)
 		CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, VARIABLE_PITCH,
 		TEXT("SlantCYRILLIC"));
 	HDC hdc = GetDC(hWndDialog);
-
-	PrintTextToScreen(hdc, wWidth / 2 - 190, 50, "DO YOU REALLY WANT TO EXIT?", 27, RGB(255, 0, 0), hFont);
+	if (isExit)
+		PrintTextToScreen(hdc, wWidth / 2 - 190, 50, "DO YOU REALLY WANT TO EXIT?", 27, RGB(255, 0, 0), hFont);
+	else
+		PrintTextToScreen(hdc, wWidth / 2 - 220, 50, "DO YOU REALLY WANT GO TO MENU?", 30, RGB(255, 0, 0), hFont);
 	ReleaseDC(hWndDialog, hdc);
 	DeleteObject(hFont);
 }
@@ -103,12 +108,19 @@ LRESULT CALLBACK DialogProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPara
 		switch (wParam)
 		{
 		case BUTTON_YES:
-			SendMessage(parent, WM_DESTROY, NULL, NULL);
+			if (isExit)
+				SendMessage(parent, WM_DESTROY, NULL, NULL);
+			else
+			{
+				EnableWindow(parent, TRUE);
+				ShowWindow(hWnd, SW_HIDE);
+				SendMessage(parent, WM_COMMAND, GO_TO_MENU, NULL);			
+			}
 			break;
 		case BUTTON_OK:
 		case BUTTON_NO:
 			EnableWindow(parent, TRUE);
-			SendMessage(parent,WM_COMMAND,CONTINUE,NULL );
+			SendMessage(parent,WM_COMMAND,CONTINUE,NULL);
 			ShowWindow(hWnd, SW_HIDE);
 			break;
 		}

@@ -39,6 +39,7 @@ const int WindowWidth = 1200;
 int buttonIncline;
 bool inGame, isPause;
 bool isWithBot;
+int currentDifficulty;
 
 void ShowMainMenu(HWND hWnd)
 {
@@ -112,6 +113,7 @@ void ShowGameField(HWND hWnd,bool withBot,int difficulty)
 	inGame = true;
 	isPause = false;
 	isWithBot = withBot;
+	currentDifficulty = difficulty;
 	StartGame(hWnd,withBot, difficulty);
 }
 
@@ -237,8 +239,10 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			SendMessage(hWnd, WM_CLOSE, wParam, lParam);
 			break;
 		case BUTTON_REPEAT_ID:
+			ShowGameField(hWnd, isWithBot, currentDifficulty);
 			break;
 		case BUTTON_MAIN_MENU_ID:
+			inGame = false;
 			ShowMainMenu(hWnd);
 			break;
 		case CONTINUE:
@@ -281,9 +285,11 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 				isPause = false;
 			}
 		}
-		if (inGame && wParam == 27) //если нажали ESC то выходим 
+		if (inGame && !isPause && wParam == 27) //если нажали ESC то выходим 
 		{
-			ExitGame();
+			isPause = true;
+			Pause();
+			ShowExitDialog(hWndDialog, hWnd, false);
 		}
 		if (wParam == 8) //press BackSpace to Go Back
 		{
@@ -305,7 +311,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			isPause = true;
 			Pause();
 		}
-		ShowDialogExitProgram(hWndDialog, hWnd);
+		ShowExitDialog(hWndDialog, hWnd,true);
 		break;
 	//destroy window
 	case WM_DESTROY:
