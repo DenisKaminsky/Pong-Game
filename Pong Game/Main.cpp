@@ -20,6 +20,7 @@
 #define BUTTON_REPEAT_ID 10008
 #define BUTTON_MAIN_MENU_ID 10009
 #define EXIT_GAME_COMMAND 9000
+#define CONTINUE 5000
 
 HWND buttonPlay, buttonExit, buttonHelp;//main menu button
 HWND buttonOnePlayer, buttonTwoPlayer; //choose mode menu
@@ -240,6 +241,13 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		case BUTTON_MAIN_MENU_ID:
 			ShowMainMenu(hWnd);
 			break;
+		case CONTINUE:
+			if (inGame && isPause)
+			{
+				Continue();
+				isPause = false;
+			}
+			break;
 		case EXIT_GAME_COMMAND:
 			inGame = false;
 			ShowGameResult(hWnd, (LPCSTR)lParam, strlen((LPCSTR)lParam));
@@ -292,6 +300,11 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	break;
 	//closing window
 	case WM_CLOSE:
+		if (inGame)
+		{
+			isPause = true;
+			Pause();
+		}
 		ShowDialogExitProgram(hWndDialog, hWnd);
 		break;
 	//destroy window
