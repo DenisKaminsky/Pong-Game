@@ -25,8 +25,8 @@ int rBoardHeight;
 //boards width
 int boardWidth;
 //border
-int BottomBorderHeight = 25;
-int TopBorderHeight = 48;
+int BottomBorderHeight = 20;
+int TopBorderHeight = 46;
 
 int lPlayerPoints = 0;
 int rPlayerPoints = 0;
@@ -51,9 +51,15 @@ void CheckGameIsOver()
 void BallBounceFromBoundary()
 {
 	if (ballPosition.y + ballRadius >= windowHeight - BottomBorderHeight)
+	{
 		ballSpeed.y = -ballSpeed.y;
+		ballPosition.y = windowHeight - BottomBorderHeight - ballRadius - 1;
+	}
 	if (ballPosition.y - ballRadius <= TopBorderHeight)
+	{
 		ballSpeed.y = -ballSpeed.y;
+		ballPosition.y = TopBorderHeight + ballRadius + 1;
+	}
 }
 
 void BallOutOfField()
@@ -114,7 +120,7 @@ void ChangeBallSpeed()
 	ballSpeed.y+=increment;
 
 	OptimizeBallSpeed(ballSpeed.x,defaultBallSpeed.x);
-	OptimizeBallSpeed(ballSpeed.x,defaultBallSpeed.y);
+	OptimizeBallSpeed(ballSpeed.y,defaultBallSpeed.y);
 }
 
 void BoundBallDesk()
@@ -255,25 +261,25 @@ void SetGameParameters(bool isWithBotMode,int difficulty, int bRadius, int bWidt
 	switch (difficulty)
 	{
 	case 1:
-		defaultBallSpeed.y = ballSpeed.y = 1;
-		defaultBallSpeed.x = ballSpeed.x = 1;
-		maxSpeedDeviation = 3;
-		minSpeedDeviation = 1;
-		lBoardSpeed = rbSpeed+2;
+		defaultBallSpeed.y = ballSpeed.y = 11;
+		defaultBallSpeed.x = ballSpeed.x = 11;
+		maxSpeedDeviation = 7;
+		minSpeedDeviation = 0;
+		lBoardSpeed = rbSpeed;
 		break;
 	case 2:
-		defaultBallSpeed.y = ballSpeed.y = 15;
-		defaultBallSpeed.x = ballSpeed.x = 15;
-		maxSpeedDeviation = 3;
-		minSpeedDeviation = 2;
-		lBoardSpeed = rbSpeed;
+		defaultBallSpeed.y = ballSpeed.y = 12;
+		defaultBallSpeed.x = ballSpeed.x = 12;
+		maxSpeedDeviation = 7;
+		minSpeedDeviation = 0;
+		lBoardSpeed = rbSpeed + 3;
 		break;
 	case 3:
-		defaultBallSpeed.y = ballSpeed.y = 20;
-		defaultBallSpeed.x = ballSpeed.x = 20;
-		maxSpeedDeviation = 3;
-		minSpeedDeviation = 3;
-		lBoardSpeed = rbSpeed;
+		defaultBallSpeed.y = ballSpeed.y = 15;
+		defaultBallSpeed.x = ballSpeed.x = 15;
+		maxSpeedDeviation = 7;
+		minSpeedDeviation = 0;
+		lBoardSpeed = rbSpeed + 5;
 		break;
 	default:
 		defaultBallSpeed.y = ballSpeed.y = 12;
