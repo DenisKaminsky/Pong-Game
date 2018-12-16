@@ -34,12 +34,12 @@ bool Graphics::Init(HWND windowHandle)
 	GetClientRect(windowHandle, &rect);
 	//bind our window with D2
 	res = factory->CreateHwndRenderTarget(
-		D2D1::RenderTargetProperties(),
+		D2D1::RenderTargetProperties(D2D1_RENDER_TARGET_TYPE_DEFAULT, D2D1::PixelFormat(DXGI_FORMAT_UNKNOWN, D2D1_ALPHA_MODE_IGNORE)),
 		D2D1::HwndRenderTargetProperties(
 			windowHandle, D2D1::SizeU(rect.right, rect.bottom)),
 		&renderTarget
 	);
-
+	renderTarget->SetTextAntialiasMode(D2D1_TEXT_ANTIALIAS_MODE_GRAYSCALE);
 	if (res != S_OK)
 		return false;
 	return true;

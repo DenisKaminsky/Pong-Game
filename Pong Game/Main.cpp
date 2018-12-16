@@ -263,36 +263,14 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	{
 		if (inGame && !isPause)
 		{
-			if ((GetAsyncKeyState(38) && GetAsyncKeyState(87)))//W + UP
-			{
+			if (GetAsyncKeyState(38))//right up
 				RBoardMoveUp();
-				LBoardMoveUp();
-			}
-			else if ((GetAsyncKeyState(40) && GetAsyncKeyState(87)))//W + DOWN
-			{
+			if (GetAsyncKeyState(40))//right down
 				RBoardMoveDown();
+			if (!isWithBot && GetAsyncKeyState(87))//left up
 				LBoardMoveUp();
-			}
-			else if ((GetAsyncKeyState(38) && GetAsyncKeyState(83)))//S + UP
-			{
-				RBoardMoveUp();
+			if (!isWithBot && GetAsyncKeyState(83))//left down
 				LBoardMoveDown();
-			}
-			else if ((GetAsyncKeyState(40) && GetAsyncKeyState(83)))//S + DOWN
-			{
-				RBoardMoveDown();
-				LBoardMoveDown();
-			}
-			else {
-				if (wParam == 38)//right up
-					RBoardMoveUp();
-				if (wParam == 40)//right down
-					RBoardMoveDown();
-				if (!isWithBot && wParam == 87)//left up
-					LBoardMoveUp();
-				if (!isWithBot && wParam == 83)//left down
-					LBoardMoveDown();
-			}
 		}
 		if (inGame && wParam == 80) //press P to pause 
 		{
@@ -399,7 +377,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdL
 	while (GetMessage(&msg, NULL, 0, 0))
 	{
 		TranslateMessage(&msg);
-		DispatchMessage(&msg);
+		DispatchMessage(&msg);		
 	}
 
 	return (int)msg.wParam;

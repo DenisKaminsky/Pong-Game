@@ -81,6 +81,79 @@ void BoardLimit(POINT &boardPosition,int boardHeight)
 		boardPosition.y = windowHeight - boardHeight - BottomBorderHeight;
 }
 
+void BoundBallDesk()
+{
+	//for right desk
+	if ((ballPosition.x + ballRadius >= rBoardPosition.x) 
+		&& (ballPosition.y + ballRadius >= rBoardPosition.y) 
+		&& (ballPosition.y - ballRadius <= rBoardPosition.y+rBoardHeight))
+	{
+		//bound from side edge
+		if ( (ballPosition.y > rBoardPosition.y) && (ballPosition.y < rBoardPosition.y+rBoardHeight) ) 
+		{
+			ballPosition.x = rBoardPosition.x - ballRadius - 1;
+			ballSpeed.x = -ballSpeed.x;
+		}
+		//bound from top/bottom edge
+		else if (ballPosition.x > rBoardPosition.x)
+		{
+			if (ballPosition.y <= rBoardPosition.y)//from top
+				ballPosition.y = rBoardPosition.y - ballRadius - 1;
+			if (ballPosition.y >= rBoardPosition.y + rBoardHeight)//from bottom
+				ballPosition.y = rBoardPosition.y + rBoardHeight + ballRadius + 1;
+			ballSpeed.y = -ballSpeed.y;
+		}
+		//bound from angle
+		else
+		{
+			if (((ballPosition.y <= rBoardPosition.y) && (ballSpeed.y < 0)) || ((ballPosition.y >= rBoardPosition.y + rBoardHeight) && (ballSpeed.y > 0)))
+				ballSpeed.x = -ballSpeed.x;
+			else
+			{
+				ballSpeed.x = -ballSpeed.x;
+				ballSpeed.y = -ballSpeed.y;
+			}
+			ballPosition.x = rBoardPosition.x-ballRadius;
+		}
+	}
+
+	//for left desk
+	if ((ballPosition.x - ballRadius <= lBoardPosition.x + boardWidth)
+		&& (ballPosition.y + ballRadius >= lBoardPosition.y)
+		&& (ballPosition.y - ballRadius <= lBoardPosition.y + lBoardHeight))
+	{
+		//bound from side edge
+		if ((ballPosition.y > lBoardPosition.y) && (ballPosition.y < lBoardPosition.y + lBoardHeight))
+		{
+			ballPosition.x = lBoardPosition.x + boardWidth + ballRadius + 1;
+			ballSpeed.x = -ballSpeed.x;
+		}
+		//bound from top/bottom edge
+		else if (ballPosition.x < lBoardPosition.x+boardWidth)
+		{
+			if (ballPosition.y <= lBoardPosition.y)//from top
+				ballPosition.y = lBoardPosition.y - ballRadius - 1;
+			if (ballPosition.y >= lBoardPosition.y + lBoardHeight)//from bottom
+				ballPosition.y = lBoardPosition.y + lBoardHeight + ballRadius + 1;
+			ballSpeed.y = -ballSpeed.y;
+		}
+		//bound from angle
+		else
+		{
+			if (((ballPosition.y <= lBoardPosition.y) && (ballSpeed.y < 0)) || ((ballPosition.y >= lBoardPosition.y + lBoardHeight) && (ballSpeed.y > 0)))
+				ballSpeed.x = -ballSpeed.x;
+			else
+			{
+				ballSpeed.x = -ballSpeed.x;
+				ballSpeed.y = -ballSpeed.y;
+			}
+			ballPosition.x = lBoardPosition.x + boardWidth + ballRadius;
+		}
+	}
+
+
+}
+
 void RBoardMoveDown()
 {
 	rBoardPosition.y += rBoardSpeed;
@@ -131,8 +204,8 @@ void SetGameParameters(bool isWithBotMode,int difficulty, int bRadius, int bWidt
 	//easy
 	if (difficulty = 1)
 	{
-		ballSpeed.y = 5;
-		ballSpeed.x = 1;
+		ballSpeed.y = 10;
+		ballSpeed.x = 5;
 		lBoardSpeed = rbSpeed;
 	}
 }
@@ -156,12 +229,13 @@ VOID CALLBACK TimerProc(HWND hWnd, UINT uMessage, UINT_PTR uEventId, DWORD dwTim
 	graphics->DrawString(L":", 1, (float)(windowWidth / 2 + 2), 1, 1, 20, 40, 255, 0, 0, 1);
 	graphics->DrawString(std::to_wstring(rPlayerPoints).c_str(), 1, (float)(windowWidth / 2 + 20), 1, 20, 20, 40, 255, 0, 0, 1);
 	graphics->EndDraw();
+
 	ballPosition.x += ballSpeed.x;
 	ballPosition.y += ballSpeed.y;
+
 	BallBounceFromBoundary();
 	//here boards and ball contact physics
-	BoardLimit(lBoardPosition, lBoardHeight);
-	//BoardLimit(rBoardPosition, rBoardHeight);
+	BoundBallDesk();
 	BallOutOfField();
 }
 
