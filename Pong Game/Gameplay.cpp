@@ -10,6 +10,9 @@ HWND hWnd;
 //ball
 POINT ballPosition;
 POINT ballSpeed;
+POINT defaultBallSpeed;
+int maxSpeedDeviation;
+int minSpeedDeviation;
 int ballRadius;
 //left board
 POINT lBoardPosition;
@@ -31,14 +34,6 @@ int windowHeight = 0;
 int windowWidth = 0;
 bool withBot;
 
-void BallBounceFromBoundary()
-{
-	if (ballPosition.y + ballRadius >= windowHeight-BottomBorderHeight)
-		ballSpeed.y = -ballSpeed.y;
-	if (ballPosition.y - ballRadius <= TopBorderHeight)
-		ballSpeed.y = -ballSpeed.y;
-}
-
 void CheckGameIsOver()
 {
 	if (lPlayerPoints == 6)
@@ -53,12 +48,22 @@ void CheckGameIsOver()
 			StopGame("PLAYER 2 WIN");
 }
 
+void BallBounceFromBoundary()
+{
+	if (ballPosition.y + ballRadius >= windowHeight - BottomBorderHeight)
+		ballSpeed.y = -ballSpeed.y;
+	if (ballPosition.y - ballRadius <= TopBorderHeight)
+		ballSpeed.y = -ballSpeed.y;
+}
+
 void BallOutOfField()
 {
 	if (ballPosition.x + ballRadius >= windowWidth)
 	{		
 		ballPosition.x = windowWidth / 2;
 		ballPosition.y = windowHeight / 2;
+		ballSpeed.x = -defaultBallSpeed.x;
+		ballSpeed.y = defaultBallSpeed.y;
 		lPlayerPoints++;
 		Sleep(1000);
 		CheckGameIsOver();
@@ -67,6 +72,8 @@ void BallOutOfField()
 	{
 		ballPosition.x = windowWidth / 2;
 		ballPosition.y = windowHeight / 2;
+		ballSpeed.x = defaultBallSpeed.x;
+		ballSpeed.y = defaultBallSpeed.y;
 		rPlayerPoints++;
 		Sleep(1000);
 		CheckGameIsOver();
@@ -81,8 +88,39 @@ void BoardLimit(POINT &boardPosition,int boardHeight)
 		boardPosition.y = windowHeight - boardHeight - BottomBorderHeight;
 }
 
+void OptimizeBallSpeed(LONG &param,LONG defaultValue)
+{
+	if (param > 0)
+	{
+		if (param > defaultValue + maxSpeedDeviation)
+			param = defaultValue + maxSpeedDeviation;
+		if (param < defaultValue - minSpeedDeviation)
+			param = defaultValue - minSpeedDeviation;
+	}
+	else
+	{
+		if (param > -defaultValue + minSpeedDeviation)
+			param = -defaultValue + minSpeedDeviation;
+		if (param < -defaultValue - maxSpeedDeviation)
+			param = -defaultValue - maxSpeedDeviation;
+	}
+}
+
+void ChangeBallSpeed()
+{
+	int increment = -3 + rand() % 7;
+	ballSpeed.x+=increment;
+	increment = -2 + rand() % 5;
+	ballSpeed.y+=increment;
+
+	OptimizeBallSpeed(ballSpeed.x,defaultBallSpeed.x);
+	OptimizeBallSpeed(ballSpeed.x,defaultBallSpeed.y);
+}
+
 void BoundBallDesk()
 {
+	bool isBound = false;
+
 	//for right desk
 	if ((ballPosition.x + ballRadius >= rBoardPosition.x) 
 		&& (ballPosition.y + ballRadius >= rBoardPosition.y) 
@@ -115,6 +153,7 @@ void BoundBallDesk()
 			}
 			ballPosition.x = rBoardPosition.x-ballRadius;
 		}
+		isBound = true;
 	}
 
 	//for left desk
@@ -149,9 +188,12 @@ void BoundBallDesk()
 			}
 			ballPosition.x = lBoardPosition.x + boardWidth + ballRadius;
 		}
+		isBound = true;
 	}
 
-
+	//change ball speed
+	if (isBound)
+		ChangeBallSpeed();
 }
 
 void RBoardMoveDown()
@@ -178,6 +220,14 @@ void LBoardMoveUp()
 	BoardLimit(lBoardPosition, lBoardHeight);
 }
 
+void MoveBot()
+{
+	if (lBoardPosition.y+lBoardHeight < ballPosition.y)
+		LBoardMoveDown();
+	if (lBoardPosition.y > ballPosition.y)
+		LBoardMoveUp();
+}
+
 void SetGameParameters(bool isWithBotMode,int difficulty, int bRadius, int bWidth, int lbHeight, int rbHeight, int rbSpeed)
 {
 	RECT rect;
@@ -201,12 +251,37 @@ void SetGameParameters(bool isWithBotMode,int difficulty, int bRadius, int bWidt
 	rBoardSpeed = rbSpeed;
 	rBoardPosition.x = windowWidth - boardWidth - 8;
 	rBoardPosition.y = windowHeight / 2 - rBoardHeight / 2;
-	//easy
-	if (difficulty = 1)
+	
+	switch (difficulty)
 	{
-		ballSpeed.y = 10;
-		ballSpeed.x = 5;
+	case 1:
+		defaultBallSpeed.y = ballSpeed.y = 1;
+		defaultBallSpeed.x = ballSpeed.x = 1;
+		maxSpeedDeviation = 3;
+		minSpeedDeviation = 1;
+		lBoardSpeed = rbSpeed+2;
+		break;
+	case 2:
+		defaultBallSpeed.y = ballSpeed.y = 15;
+		defaultBallSpeed.x = ballSpeed.x = 15;
+		maxSpeedDeviation = 3;
+		minSpeedDeviation = 2;
 		lBoardSpeed = rbSpeed;
+		break;
+	case 3:
+		defaultBallSpeed.y = ballSpeed.y = 20;
+		defaultBallSpeed.x = ballSpeed.x = 20;
+		maxSpeedDeviation = 3;
+		minSpeedDeviation = 3;
+		lBoardSpeed = rbSpeed;
+		break;
+	default:
+		defaultBallSpeed.y = ballSpeed.y = 12;
+		defaultBallSpeed.x = ballSpeed.x = 12;
+		maxSpeedDeviation = 10;
+		minSpeedDeviation = 0;
+		lBoardSpeed = rbSpeed;
+		break;
 	}
 }
 
@@ -233,6 +308,8 @@ VOID CALLBACK TimerProc(HWND hWnd, UINT uMessage, UINT_PTR uEventId, DWORD dwTim
 	ballPosition.x += ballSpeed.x;
 	ballPosition.y += ballSpeed.y;
 
+	if (withBot)
+		MoveBot();
 	BallBounceFromBoundary();
 	//here boards and ball contact physics
 	BoundBallDesk();
@@ -262,7 +339,7 @@ void DeleteGame()
 
 void StartGame(HWND hwnd,bool isWithBotMode,int difficulty)
 {
-	SetGameParameters(isWithBotMode,difficulty,20,30,180,180,10);
+	SetGameParameters(isWithBotMode,difficulty,12,30,180,180,10);
 	SetTimer(hWnd, TIMER_ID, 20, TimerProc);
 }
 

@@ -221,16 +221,16 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			ShowDifficultyMenu(hWnd);
 			break;
 		case BUTTON_TWO_PLAYER_ID:
-			ShowGameField(hWnd,false,1);
+			ShowGameField(hWnd,false,0);
 			break;
 		case BUTTON_EASY_ID:			
 			ShowGameField(hWnd, true, 1);
 			break;
 		case BUTTON_NORMAL_ID:
-			ShowGameField(hWnd, true, 1);
+			ShowGameField(hWnd, true, 2);
 			break;
 		case BUTTON_HARD_ID:
-			ShowGameField(hWnd, true, 1);
+			ShowGameField(hWnd, true, 3);
 			break;
 		case BUTTON_HELP_ID:
 			ShowHelpDialog(hWndDialog, hWnd);
