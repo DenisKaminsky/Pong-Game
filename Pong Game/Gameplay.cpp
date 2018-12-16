@@ -277,9 +277,9 @@ void SetGameParameters(bool isWithBotMode,int difficulty, int bRadius, int bWidt
 	case 3:
 		defaultBallSpeed.y = ballSpeed.y = 15;
 		defaultBallSpeed.x = ballSpeed.x = 15;
-		maxSpeedDeviation = 7;
+		maxSpeedDeviation = 13;
 		minSpeedDeviation = 0;
-		lBoardSpeed = rbSpeed + 5;
+		lBoardSpeed = rbSpeed + 7;
 		break;
 	default:
 		defaultBallSpeed.y = ballSpeed.y = 12;
@@ -291,8 +291,21 @@ void SetGameParameters(bool isWithBotMode,int difficulty, int bRadius, int bWidt
 	}
 }
 
+void MoveBoard()
+{
+	if (GetAsyncKeyState(38))//right up
+		RBoardMoveUp();
+	if (GetAsyncKeyState(40))//right down
+		RBoardMoveDown();
+	if (!withBot && GetAsyncKeyState(87))//left up
+		LBoardMoveUp();
+	if (!withBot && GetAsyncKeyState(83))//left down
+		LBoardMoveDown();
+}
+
 VOID CALLBACK TimerProc(HWND hWnd, UINT uMessage, UINT_PTR uEventId, DWORD dwTime)
 {	
+	MoveBoard();
 	graphics->BeginDraw();
 	graphics->ClearScreen(0, 0, 0);
 	//draw background
@@ -301,10 +314,8 @@ VOID CALLBACK TimerProc(HWND hWnd, UINT uMessage, UINT_PTR uEventId, DWORD dwTim
 	graphics->DrawCircle(ballPosition.x, ballPosition.y, ballRadius, 255, 0, 0, 1);
 	//drawLBoard
 	graphics->DrawImage(graphics->GetBitmapLBoard(), lBoardPosition.x, lBoardPosition.y, boardWidth, lBoardHeight);
-	//graphics->DrawRoundRectangle(lBoardPosition.x, lBoardPosition.y, boardWidth, lBoardHeight, 255, 0, 0, 1);
 	//drawRBoard
 	graphics->DrawImage(graphics->GetBitmapRBoard(), rBoardPosition.x, rBoardPosition.y, boardWidth, rBoardHeight);
-	//graphics->DrawRoundRectangle(rBoardPosition.x, rBoardPosition.y, boardWidth, rBoardHeight, 255, 0, 0, 1);
 	//draw score
 	graphics->DrawString(std::to_wstring(lPlayerPoints).c_str(), 1, (float)(windowWidth / 2 - 30), 1, 20, 20, 40, 255, 0, 0, 1);
 	graphics->DrawString(L":", 1, (float)(windowWidth / 2 + 2), 1, 1, 20, 40, 255, 0, 0, 1);

@@ -261,17 +261,6 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	//message from keybord
 	case WM_KEYDOWN:
 	{
-		if (inGame && !isPause)
-		{
-			if (GetAsyncKeyState(38))//right up
-				RBoardMoveUp();
-			if (GetAsyncKeyState(40))//right down
-				RBoardMoveDown();
-			if (!isWithBot && GetAsyncKeyState(87))//left up
-				LBoardMoveUp();
-			if (!isWithBot && GetAsyncKeyState(83))//left down
-				LBoardMoveDown();
-		}
 		if (inGame && wParam == 80) //press P to pause 
 		{
 			if (!isPause)
